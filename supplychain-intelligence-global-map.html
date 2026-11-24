@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#070b14">
+  <title>SupplyChain Intelligence</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #070b14; --panel: rgba(16,26,46,.78); --panel-2: #0a1220;
+      --line: #1f2d46; --text: #d9e2f1; --muted: #8795ad;
+      --cyan: #22d3ee; --blue: #4f8cff; --amber: #f5b942;
+      --red: #f0616d; --violet: #a78bfa; --green: #34d399;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-padding-top: 12px; }
+    body {
+      margin: 0; min-height: 100vh; color: var(--text);
+      background: radial-gradient(1200px 600px at 80% -10%, #10223f 0, var(--bg) 60%) fixed var(--bg);
+      font: 13px/1.55 "Segoe UI", system-ui, -apple-system, sans-serif;
+    }
+    a { color: var(--cyan); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    button, input, select { font: inherit; }
+    button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible {
+      outline: 2px solid var(--cyan); outline-offset: 2px;
+    }
+    .topbar {
+      position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 18px;
+      padding: 11px 20px; border-bottom: 1px solid var(--line);
+      background: rgba(8,13,25,.94); backdrop-filter: blur(14px); flex-wrap: wrap;
+    }
+    .logo { color: var(--amber); font-size: 15px; font-weight: 750; white-space: nowrap; letter-spacing: .1px; }
+    .logo span { color: var(--cyan); }
+    .search-wrap { position: relative; flex: 1; min-width: 240px; max-width: 560px; }
+    .search-input, .input, select {
+      width: 100%; padding: 9px 12px; border: 1px solid var(--line); border-radius: 7px;
+      background: var(--panel-2); color: var(--text);
+    }
+    .search-input::placeholder, .input::placeholder { color: #70809a; }
+    .search-results {
+      display: none; position: absolute; top: calc(100% + 5px); left: 0; right: 0; z-index: 30;
+      max-height: 340px; overflow: auto; padding: 5px; border: 1px solid var(--line);
+      border-radius: 8px; background: #0b1424; box-shadow: 0 18px 45px #0009;
+    }
+    .search-results.open { display: block; }
+    .search-result {
+      width: 100%; display: flex; justify-content: space-between; gap: 12px; text-align: left;
+      padding: 9px 10px; border: 0; border-radius: 5px; color: var(--text); background: transparent; cursor: pointer;
+    }
+    .search-result:hover, .search-result.active { background: #16243d; }
+    .search-result small { color: var(--muted); text-align: right; }
+    .pill, .tag { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border: 1px solid var(--line); border-radius: 99px; font-size: 11px; white-space: nowrap; }
+    .pill.demo { color: var(--amber); border-color: #765a24; background: #f5b94212; }
+    nav { display: flex; gap: 3px; padding: 0 18px; border-bottom: 1px solid var(--line); overflow-x: auto; background: #080d19a8; }
+    nav button { flex: 0 0 auto; padding: 11px 12px 9px; border: 0; border-bottom: 2px solid transparent; color: var(--muted); background: none; cursor: pointer; white-space: nowrap; }
+    nav button:hover { color: var(--text); }
+    nav button.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+    main { max-width: 1560px; margin: 0 auto; padding: 18px 20px 44px; }
+    .grid { display: grid; gap: 14px; }
+    .grid-4 { grid-template-columns: repeat(4, minmax(0,1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .grid-main { grid-template-columns: minmax(290px, 360px) minmax(0,1fr); }
+    .panel { min-width: 0; padding: 15px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); box-shadow: 0 8px 30px #00000012; }
+    .panel h2 { margin: 0 0 10px; color: var(--muted); font-size: 12px; font-weight: 650; letter-spacing: .35px; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(21px, 3vw, 27px); line-height: 1.2; }
+    h3 { margin: 0 0 7px; font-size: 14px; }
+    p { margin: 9px 0; }
+    .muted { color: var(--muted); }
+    .kpi { color: var(--cyan); font: 650 28px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .kpi-label { margin-bottom: 7px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .4px; }
+    .notice { margin-bottom: 14px; padding: 10px 13px; border-left: 3px solid var(--amber); border-radius: 5px; background: #f5b9420c; color: #d7d0bd; }
+    .notice strong { color: var(--amber); }
+    .notice.info { border-left-color: var(--cyan); background: #22d3ee0b; }
+    .company-link { display: inline; padding: 0; border: 0; color: var(--cyan); background: none; cursor: pointer; text-align: left; }
+    .company-link:hover { text-decoration: underline; }
+    .company-link.large { color: var(--text); font-size: 16px; font-weight: 700; }
+    .button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 7px 11px; border: 1px solid var(--line); border-radius: 7px; color: var(--text); background: var(--panel-2); cursor: pointer; }
+    .button:hover { border-color: var(--cyan); }
+    .button.primary { border-color: #157c8a; background: #0d3541; color: #a5f3fc; }
+    .button.danger { color: #ff9da5; }
+    .button:disabled { opacity: .5; cursor: not-allowed; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid #16223a; }
+    .row:last-child { border-bottom: 0; }
+    .row-main { min-width: 0; }
+    .row-main small { display: block; color: var(--muted); }
+    .tag.high { color: var(--green); border-color: #236d54; }
+    .tag.medium { color: var(--amber); border-color: #765a24; }
+    .tag.low { color: var(--red); border-color: #713943; }
+    .tag.unverified { color: var(--amber); border-color: #765a24; background: #f5b9420b; }
+    .tag.source-checked { color: var(--green); border-color: #236d54; background: #34d3990b; }
+    .tag.source-official { color: var(--cyan); border-color: #155b69; background: #22d3ee0b; }
+    .tag.critical { color: var(--amber); border-color: #765a24; }
+    .tag.direct { color: var(--cyan); border-color: #155b69; }
+    .tag.indirect { color: var(--violet); border-color: #55427f; }
+    .table-wrap { width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 760px; }
+    th { padding: 8px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 11px; font-weight: 600; text-align: left; white-space: nowrap; }
+    td { padding: 9px 8px; border-bottom: 1px solid #16223a; vertical-align: top; }
+    tbody tr:hover { background: #ffffff05; }
+    .dot { display: inline-block; width: 8px; height: 8px; margin-right: 5px; border-radius: 50%; vertical-align: middle; }
+    .field-label { display: block; margin: 0 0 5px; color: var(--muted); font-size: 11px; }
+    .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 9px 0 12px; }
+    .toolbar .input { width: min(260px, 100%); }
+    .toolbar select { width: auto; min-width: 95px; }
+    .check { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); cursor: pointer; }
+    .check input { accent-color: var(--cyan); }
+    .company-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+    .company-description { color: #b5c1d4; }
+    .profile-table { min-width: 0; }
+    .profile-table td:first-child { width: 125px; color: var(--muted); }
+    .graph-frame { min-height: 420px; overflow: auto; border: 1px solid #17253d; border-radius: 8px; background: radial-gradient(circle at 50% 50%, #0d1a30, #060a13); }
+    .graph-svg { display: block; width: 100%; min-width: 680px; height: auto; }
+    .graph-node { cursor: pointer; }
+    .graph-node rect { stroke: #33445f; stroke-width: 1.4; fill: #101d32; }
+    .graph-node.root rect { stroke: var(--amber); stroke-width: 2.2; fill: #332817; }
+    .graph-node.supplier rect { stroke: #1b8192; }
+    .graph-node.customer rect { stroke: #386bc0; }
+    .graph-node.competitor rect { stroke: #8a3e49; }
+    .graph-node.partner rect { stroke: #67539a; }
+    .graph-node text { pointer-events: none; fill: var(--text); font-family: inherit; }
+    .graph-node .sub { fill: var(--muted); font-size: 10px; }
+    .graph-node.dim { opacity: .17; }
+    .graph-node.hit rect { stroke: #fff; stroke-width: 3; }
+    .graph-edge { fill: none; stroke-width: 2; opacity: .8; }
+    .graph-edge.supply { stroke: #2589a1; }
+    .graph-edge.competitor { stroke: var(--red); stroke-dasharray: 6 5; }
+    .graph-edge.partner { stroke: var(--violet); }
+    .graph-edge.critical { stroke: var(--amber); stroke-width: 3; }
+    .graph-legend { display: flex; flex-wrap: wrap; gap: 13px; margin: 9px 0; color: var(--muted); font-size: 11px; }
+
+    .map-layout { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:14px; align-items:stretch; margin-top:12px; }
+    .world-map-wrap { min-width:0; overflow:hidden; border:1px solid #1b2b45; border-radius:9px; background:#081321; }
+    .world-map { display:block; width:100%; height:auto; min-height:360px; }
+    .map-land { fill:#142943; stroke:#2a4565; stroke-width:1.2; stroke-linejoin:round; }
+    .map-grid { stroke:#1b304b; stroke-width:1; stroke-dasharray:3 7; opacity:.8; }
+    .map-region-label { fill:#46617f; font-size:13px; letter-spacing:2px; font-weight:650; text-anchor:middle; pointer-events:none; }
+    .map-link { fill:none; stroke:#f5b942; stroke-width:2.4; opacity:.85; }
+    .map-leader { stroke:#53708f; stroke-width:1; opacity:.75; }
+    .map-pin { cursor:pointer; outline:none; }
+    .map-pin .pin-core { stroke:#07111e; stroke-width:2.4; }
+    .map-pin circle.pin-halo { fill:none; stroke:#dce9f8; stroke-width:1; opacity:.35; }
+    .map-pin.selected circle.pin-halo { stroke:var(--amber); stroke-width:3; opacity:1; }
+    .map-pin:focus circle.pin-halo, .map-pin:hover circle.pin-halo { stroke:#fff; stroke-width:2.5; opacity:1; }
+    .map-pin .map-label { fill:#e7f0ff; font-size:11px; font-weight:650; paint-order:stroke; stroke:#081321; stroke-width:3px; stroke-linejoin:round; opacity:0; pointer-events:none; }
+    .map-pin:hover .map-label, .map-pin:focus .map-label, .map-pin.selected .map-label { opacity:1; }
+    .map-sidebar { display:flex; flex-direction:column; gap:10px; min-height:0; }
+    .map-selected { padding:12px; border:1px solid var(--line); border-radius:8px; background:#0a1424; }
+    .map-company-list { max-height:310px; overflow:auto; padding-right:3px; }
+    .map-company-item { width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 8px; border:0; border-radius:6px; color:var(--text); background:transparent; text-align:left; cursor:pointer; }
+    .map-company-item:hover, .map-company-item.active { background:#14243b; }
+    .map-company-item small { display:block; color:var(--muted); }
+    .map-legend { display:flex; flex-wrap:wrap; gap:10px 15px; margin-top:10px; color:var(--muted); font-size:11px; }
+    .map-swatch.hq { border-radius:50%; }
+    .map-swatch.diamond { border-radius:1px; transform:rotate(45deg); }
+    .map-swatch.square { border-radius:1px; }
+    .map-swatch.triangle { border-radius:0; clip-path:polygon(50% 0,0 100%,100% 100%); }
+    .map-swatch.bar { width:12px; height:6px; border-radius:1px; }
+    .map-legend span { display:inline-flex; align-items:center; gap:6px; }
+    .map-swatch { width:9px; height:9px; display:inline-block; border-radius:50%; }
+    .map-toolbar { display:flex; align-items:end; flex-wrap:wrap; gap:9px; margin-top:12px; }
+    .map-toolbar .map-search { width:min(230px,100%); }
+    .map-toolbar .map-select { width:auto; min-width:145px; }
+    .map-zoom { display:flex; gap:5px; margin-left:auto; }
+    .map-zoom .button { min-width:36px; }
+    .map-kpis { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    .map-kpi { padding:7px 10px; border:1px solid var(--line); border-radius:7px; background:#0a1424; }
+    .map-kpi strong { color:var(--cyan); font:650 17px ui-monospace,Consolas,monospace; }
+    @media (max-width:1000px) { .map-layout { grid-template-columns:1fr; } .map-company-list { max-height:220px; } }
+    @media (max-width:600px) { .world-map { min-height:260px; } .map-toolbar .map-select { flex:1 1 140px; } .map-zoom { margin-left:0; } }
+
+    .empty { padding: 22px 12px; color: var(--muted); text-align: center; }
+    .empty strong { display: block; margin-bottom: 4px; color: var(--text); }
+    .planned { max-width: 700px; }
+    .footer-note { margin-top: 12px; color: var(--muted); font-size: 11px; }
+    #toast { position: fixed; right: 18px; bottom: 18px; z-index: 50; max-width: min(420px, calc(100vw - 36px)); padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; background: #101d32; color: var(--text); box-shadow: 0 12px 30px #0008; opacity: 0; transform: translateY(8px); pointer-events: none; transition: .2s ease; }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    @media (max-width: 1000px) { .grid-main { grid-template-columns: 1fr; } .grid-4 { grid-template-columns: repeat(2,minmax(0,1fr)); } .grid-3 { grid-template-columns: 1fr; } }
+    @media (max-width: 600px) { .topbar { gap: 10px; padding: 10px 12px; } .search-wrap { min-width: 100%; order: 3; } main { padding: 13px 12px 32px; } nav { padding: 0 8px; } .grid-4 { grid-template-columns: repeat(2,minmax(0,1fr)); } .panel { padding: 12px; } .graph-frame { min-height: 350px; } }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo">SupplyChain<span> Intelligence</span></div>
+    <div class="search-wrap">
+      <input id="company-search" class="search-input" type="search" autocomplete="off" spellcheck="false"
+        placeholder="Search company, ticker, country or industry…" aria-label="Search companies"
+        aria-autocomplete="list" aria-controls="search-results" aria-expanded="false">
+      <div id="search-results" class="search-results" role="listbox" aria-label="Company search results"></div>
+    </div>
+    <span class="pill demo">PUBLIC-SOURCE SAMPLE</span>
+  </header>
+  <nav id="navigation" aria-label="Main navigation"></nav>
+  <main id="app" tabindex="-1"></main>
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    'use strict';
+
+    // Single-file prototype: all app code, styles and seed data are contained here.
+    // Relationship records explicitly store supplierId -> customerId for supply links.
+    const COMPANIES = [
+      {id:'nvda',name:'NVIDIA',ticker:'NVDA · NASDAQ',hq:'Santa Clara, US',country:'United States',industry:'Semiconductors: GPUs and AI accelerators',website:'nvidia.com',description:'Fabless designer of GPUs, networking and software for AI, graphics and data centers.'},
+      {id:'tsm',name:'TSMC',ticker:'2330 · TWSE (ADR: TSM · NYSE)',hq:'Hsinchu, TW',country:'Taiwan',industry:'Semiconductor foundry',website:'tsmc.com',description:'Dedicated contract chipmaker that fabricates chips designed by its customers.'},
+      {id:'asml',name:'ASML',ticker:'ASML · Euronext Amsterdam / NASDAQ',hq:'Veldhoven, NL',country:'Netherlands',industry:'Semiconductor equipment',website:'asml.com',description:'Builds lithography systems used to manufacture advanced semiconductors.'},
+      {id:'amd',name:'AMD',ticker:'AMD · NASDAQ',hq:'Santa Clara, US',country:'United States',industry:'Semiconductors: CPUs and GPUs',website:'amd.com',description:'Fabless designer of CPUs, GPUs and adaptive computing chips.'},
+      {id:'msft',name:'Microsoft',ticker:'MSFT · NASDAQ',hq:'Redmond, US',country:'United States',industry:'Software and cloud',website:'microsoft.com',description:'Software, Azure cloud and devices company.'},
+      {id:'aapl',name:'Apple',ticker:'AAPL · NASDAQ',hq:'Cupertino, US',country:'United States',industry:'Consumer electronics',website:'apple.com',description:'Consumer devices, software and services; designs its own silicon.'},
+      {id:'ssn',name:'Samsung Electronics',ticker:'005930 · KRX',hq:'Suwon, KR',country:'South Korea',industry:'Memory, foundry and devices',website:'samsung.com',description:'Memory, foundry, display and device manufacturer.'},
+      {id:'skh',name:'SK hynix',ticker:'000660 · KRX',hq:'Icheon, KR',country:'South Korea',industry:'Memory semiconductors',website:'skhynix.com',description:'Memory chipmaker producing DRAM and high-bandwidth memory.'},
+      {id:'mu',name:'Micron',ticker:'MU · NASDAQ',hq:'Boise, US',country:'United States',industry:'Memory semiconductors',website:'micron.com',description:'US memory maker producing DRAM and NAND, including HBM.'},
+      {id:'intc',name:'Intel',ticker:'INTC · NASDAQ',hq:'Santa Clara, US',country:'United States',industry:'Semiconductors: CPUs and foundry',website:'intel.com',description:'CPU designer operating its own fabs and a foundry business.'},
+      {id:'zeiss',name:'Carl Zeiss',ticker:'Private (foundation-owned)',hq:'Oberkochen, DE',country:'Germany',industry:'Optics and optoelectronics',website:'zeiss.com',description:'Optics group; its semiconductor manufacturing technology unit supplies lithography optics.'},
+      {id:'fox',name:'Foxconn (Hon Hai)',ticker:'2317 · TWSE',hq:'New Taipei, TW',country:'Taiwan',industry:'Electronics manufacturing',website:'foxconn.com',description:'Contract electronics manufacturer and major electronics assembly partner.'},
+      {id:'air',name:'Airbus',ticker:'AIR · Euronext Paris',hq:'Toulouse, FR',country:'France',industry:'Aerospace and defence',website:'airbus.com',description:'European group for commercial aircraft, defence and space.'},
+      {id:'saf',name:'Safran',ticker:'SAF · Euronext Paris',hq:'Paris, FR',country:'France',industry:'Aerospace propulsion and equipment',website:'safran-group.com',description:'Aircraft engines, equipment and defence electronics group.'},
+      {id:'tho',name:'Thales',ticker:'HO · Euronext Paris',hq:'Paris, FR',country:'France',industry:'Defence electronics and avionics',website:'thalesgroup.com',description:'Defence, aerospace and digital-security electronics group.'},
+      {id:'ldo',name:'Leonardo',ticker:'LDO · Borsa Italiana',hq:'Rome, IT',country:'Italy',industry:'Aerospace and defence',website:'leonardo.com',description:'Italian aerospace, defence and security group.'},
+      {id:'rhm',name:'Rheinmetall',ticker:'RHM · XETRA',hq:'Düsseldorf, DE',country:'Germany',industry:'Defence and automotive technology',website:'rheinmetall.com',description:'German defence and automotive technology group.'},
+      {id:'sie',name:'Siemens',ticker:'SIE · XETRA',hq:'Munich, DE',country:'Germany',industry:'Industrial automation and software',website:'siemens.com',description:'Industrial automation, infrastructure and software group.'},
+      {id:'wistron',name:'Wistron',ticker:'3231 · TWSE',hq:'New Taipei, TW',country:'Taiwan',industry:'Electronics manufacturing services',website:'wistron.com',description:'Electronics design and manufacturing services provider; named by NVIDIA as an assembly, testing and packaging contractor.'},
+      {id:'fabrinet',name:'Fabrinet',ticker:'FN · NYSE',hq:'Pathum Thani, TH',country:'Thailand',industry:'Optical, electronic and electromechanical manufacturing',website:'fabrinet.com',description:'Advanced optical and electronic manufacturing services provider; named by NVIDIA as a contractor for final-product assembly, testing and packaging.'},
+      {id:'gf',name:'GlobalFoundries',ticker:'GFS · NASDAQ',hq:'Malta, US',country:'United States',industry:'Semiconductor foundry',website:'gf.com',description:'Specialty semiconductor foundry named by AMD and Qualcomm as a manufacturing foundry.'},
+      {id:'umc',name:'United Microelectronics Corporation',ticker:'2303 · TWSE',hq:'Hsinchu, TW',country:'Taiwan',industry:'Semiconductor foundry',website:'umc.com',description:'Global semiconductor foundry; named by AMD as a foundry for programmable logic device ICs.'},
+      {id:'qcom',name:'Qualcomm',ticker:'QCOM · NASDAQ',hq:'San Diego, US',country:'United States',industry:'Semiconductors: mobile, RF, automotive and connectivity',website:'qualcomm.com',description:'Fabless semiconductor and wireless technology company with a disclosed global manufacturing and assembly network.'},
+      {id:'amkr',name:'Amkor Technology',ticker:'AMKR · NASDAQ',hq:'Tempe, US',country:'United States',industry:'Semiconductor packaging and test',website:'amkor.com',description:'Semiconductor packaging and test services provider named by Qualcomm as a primary assembly and test supplier.'},
+      {id:'aseh',name:'ASE Technology Holding',ticker:'3711 · TWSE',hq:'Kaohsiung, TW',country:'Taiwan',industry:'Semiconductor assembly, packaging and test',website:'aseglobal.com',description:'Semiconductor assembly and test group; Qualcomm lists Advanced Semiconductor Engineering and Siliconware Precision Industries among its primary suppliers.'},
+      {id:'stts',name:'STATS ChipPAC',ticker:'JCET Group subsidiary',hq:'Singapore',country:'Singapore',industry:'Semiconductor assembly and test',website:'statschippac.com',description:'Semiconductor assembly and test provider named by Qualcomm as a primary supplier; part of JCET Group.'},
+      {id:'tongfu',name:'Tongfu Microelectronics',ticker:'002156 · SZSE',hq:'Nantong, CN',country:'China',industry:'Semiconductor assembly and test',website:'tfme.com',description:'Semiconductor assembly, test and packaging company; AMD identifies its joint ventures with Tongfu as ATMP partners.'},
+      {id:'lam',name:'Lam Research',ticker:'LRCX · NASDAQ',hq:'Fremont, US',country:'United States',industry:'Semiconductor manufacturing equipment',website:'lamresearch.com',description:'Supplies wafer fabrication equipment and services; its FY2026 filing names Micron, Samsung, SK hynix and TSMC among significant customers.'},
+      {id:'lmt',name:'Lockheed Martin',ticker:'LMT · NYSE',hq:'Bethesda, US',country:'United States',industry:'Aerospace and defence',website:'lockheedmartin.com',description:'Aerospace and defence prime contractor and lead contractor for the F-35 programme.'},
+      {id:'noc',name:'Northrop Grumman',ticker:'NOC · NYSE',hq:'Falls Church, US',country:'United States',industry:'Aerospace and defence',website:'northropgrumman.com',description:'Aerospace and defence company; an F-35 programme partner supplying major aircraft structures and mission systems.'},
+      {id:'bae',name:'BAE Systems',ticker:'BA. · LSE',hq:'London, UK',country:'United Kingdom',industry:'Aerospace, defence and security',website:'baesystems.com',description:'Defence and aerospace group; an F-35 programme partner supplying structures and electronic warfare systems.'},
+      {id:'rtx',name:'RTX',ticker:'RTX · NYSE',hq:'Arlington, US',country:'United States',industry:'Aerospace and defence systems',website:'rtx.com',description:'Aerospace and defence group; its Pratt & Whitney and Collins businesses supply F-35 propulsion and aircraft systems.'},
+      {id:'rr',name:'Rolls-Royce Holdings',ticker:'RR. · LSE',hq:'London, UK',country:'United Kingdom',industry:'Aerospace propulsion and power systems',website:' rolls-royce.com'.trim(),description:'Aerospace and power systems group; its Trent XWB engines power Airbus A350 aircraft.'},
+      {id:'delta',name:'Delta Air Lines',ticker:'DAL · NYSE',hq:'Atlanta, US',country:'United States',industry:'Airlines',website:'delta.com',description:'Airline with a firm order for additional Airbus A330-900 and A350-900 aircraft in January 2026.'},
+      {id:'lufthansa',name:'Lufthansa Group',ticker:'LHA · XETRA',hq:'Cologne, DE',country:'Germany',industry:'Airlines and aviation services',website:'lufthansagroup.com',description:'Airline group with a firm order for 10 additional Airbus A350-900 aircraft in May 2026.'},
+      {id:'klm',name:'KLM Royal Dutch Airlines',ticker:'Part of Air France-KLM · AF.PA',hq:'Amstelveen, NL',country:'Netherlands',industry:'Airlines',website:'klm.com',description:'Airline within Air France-KLM; took delivery of its first Airbus A350-900 in October 2026.'}
+    ];
+
+    const SOURCES = {
+      'sec-search': {title:'SEC EDGAR filings search',url:'https://www.sec.gov/edgar/search/',kind:'Regulatory filing portal',scope:'General filing portal; not a relationship-specific citation.'},
+      'apple-suppliers': {title:'Apple Supplier Responsibility',url:'https://www.apple.com/supplier-responsibility/',kind:'Company supplier information',scope:'General supplier information; the specific relationship and product need checking.'},
+      'eurofighter': {title:'Eurofighter',url:'https://www.eurofighter.com/',kind:'Programme website',scope:'General programme reference; not a detailed supplier disclosure.'},
+      'company-site': {title:'Company website',url:null,kind:'Company website',scope:'General company reference only; does not verify this particular relationship.'},
+      'nvda-10k-2026': {title:'NVIDIA FY2026 Form 10-K — manufacturing and supply chain',url:'https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm',kind:'SEC annual report',scope:'NVIDIA names TSMC and Samsung as wafer foundries; SK hynix, Micron and Samsung as memory sources; and Hon Hai, Wistron and Fabrinet as assembly, testing and packaging contractors.'},
+      'amd-10q-2026': {title:'AMD Form 10-Q — 26 September 2026',url:'https://ir.amd.com/financial-information/sec-filings/content/0000002488-26-000191/amd-20260926.htm',kind:'SEC quarterly filing',scope:'AMD names TSMC, GlobalFoundries, UMC and Samsung in its foundry arrangements; packaging/test partners include Tongfu and Siliconware Precision Industries.'},
+      'qcom-10k-2026': {title:'Qualcomm FY2026 Form 10-K — manufacturing suppliers',url:'https://www.sec.gov/Archives/edgar/data/804328/000080432826000128/qcom-20260927.htm',kind:'SEC annual report',scope:'Qualcomm names TSMC, Samsung and GlobalFoundries as foundries; Micron and Samsung for memory; and Amkor, ASE/Siliconware and STATS ChipPAC for assembly and test.'},
+      'lam-10k-2026': {title:'Lam Research FY2026 Form 10-K — significant customers',url:'https://www.sec.gov/Archives/edgar/data/707549/000070754926000037/lrcx-20260628.htm',kind:'SEC annual report',scope:'Lam Research identifies Micron, Samsung, SK hynix and TSMC among its most significant customers across FY2024–FY2026.'},
+      'asml-10k-2025': {title:'ASML FY2025 Form 20-F — Carl Zeiss SMT supplier disclosure',url:'https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/asml-20251231.htm',kind:'SEC annual report',scope:'ASML identifies Carl Zeiss SMT as its sole supplier of key optical components for lithography systems.'},
+      'intel-10k-2025': {title:'Intel FY2025 Form 10-K — EUV lithography supplier',url:'https://www.sec.gov/Archives/edgar/data/50863/000005086326000011/intc-20251227.htm',kind:'SEC annual report',scope:'Intel identifies ASML as the sole supplier of EUV lithography tools deployed for leading-edge process nodes.'},
+      'f35-lockheed': {title:'Lockheed Martin — F-35 programme partner companies',url:'https://www.lockheedmartin.com/f35/about/F-35-Partners.html',kind:'Official programme disclosure',scope:'Lockheed Martin identifies BAE Systems, Northrop Grumman and RTX as major F-35 partner companies and describes their programme contributions.'},
+      'baes-f35-2026': {title:'BAE Systems — F-35 electronic warfare contract',url:'https://www.baesystems.com/en-us/article/delivering-electronic-warfare-systems-for-f-35-stealth-fighters',kind:'Official company announcement',scope:'BAE Systems states that it received a contract from Lockheed Martin for F-35 electronic warfare systems in October 2026.'},
+      'airbus-delta-2026': {title:'Airbus — Delta order for 31 additional widebody aircraft',url:'https://www.airbus.com/en/newsroom/press-releases/2026-01-delta-air-lines-grows-airbus-fleet-with-order-for-31-additional-widebody-aircraft',kind:'Official company announcement',scope:'Airbus states that Delta placed a firm order for 16 A330-900s and 15 A350-900s on 28 January 2026.'},
+      'airbus-lufthansa-2026': {title:'Airbus — Lufthansa Group orders 10 additional A350-900s',url:'https://www.airbus.com/en/newsroom/press-releases/2026-05-lufthansa-reinforces-commitment-to-the-a350-family-with-a-firm-order-for-10-additional-airbus-a350',kind:'Official company announcement',scope:'Airbus states that Lufthansa Group placed a firm order for 10 additional A350-900 aircraft on 12 May 2026.'},
+      'airbus-klm-2026': {title:'Airbus — KLM takes delivery of its first A350-900',url:'https://www.airbus.com/en/newsroom/press-releases/2026-10-klm-royal-dutch-airlines-takes-delivery-of-its-first-airbus-a350-900',kind:'Official company announcement',scope:'Airbus states that KLM took delivery of its first A350-900 on 2 October 2026; the release specifies Rolls-Royce engines on the aircraft.'}
+    };
+
+    // All relationship data below is inherited from the uploaded demo seed dataset.
+    // It has not been independently researched or re-verified in this repair.
+    const RELATIONSHIPS = [
+      {id:'rel-001',type:'supply',supplierId:'tsm',customerId:'nvda',product:'Foundry: GPU wafer fabrication',assessment:'H',sourceId:'nvda-10k-2026',sourceCompanyId:'nvda',evidenceStatus:'primary',evidenceNote:'NVIDIA names TSMC as a foundry used to manufacture its semiconductor wafers.',critical:false},
+      {id:'rel-002',type:'supply',supplierId:'skh',customerId:'nvda',product:'HBM / memory for AI accelerators',assessment:'H',sourceId:'nvda-10k-2026',sourceCompanyId:'nvda',evidenceStatus:'primary',evidenceNote:'NVIDIA names SK hynix as a memory supplier. The filing does not assign all memory purchases to a particular GPU generation.',critical:false},
+      {id:'rel-003',type:'supply',supplierId:'mu',customerId:'nvda',product:'Memory components',assessment:'H',sourceId:'nvda-10k-2026',sourceCompanyId:'nvda',evidenceStatus:'primary',evidenceNote:'NVIDIA names Micron as a memory supplier; the filing does not specify the exact product mix in this sentence.',critical:false},
+      {id:'rel-004',type:'supply',supplierId:'ssn',customerId:'nvda',product:'Wafer fabrication and memory components',assessment:'H',sourceId:'nvda-10k-2026',sourceCompanyId:'nvda',evidenceStatus:'primary',evidenceNote:'NVIDIA names Samsung as a wafer foundry and memory source.',critical:false},
+      {id:'rel-005',type:'supply',supplierId:'nvda',customerId:'msft',product:'Data-center GPUs for cloud and AI',assessment:'M',sourceId:'company-site',sourceCompanyId:'nvda',critical:false},
+      {id:'rel-006',type:'competitor',companyA:'nvda',companyB:'amd',product:'GPUs and AI accelerators',assessment:'H',sourceId:'sec-search',sourceCompanyId:'nvda'},
+      {id:'rel-007',type:'competitor',companyA:'nvda',companyB:'intc',product:'GPUs and AI accelerators',assessment:'H',sourceId:'sec-search',sourceCompanyId:'nvda'},
+      {id:'rel-008',type:'partner',companyA:'nvda',companyB:'sie',product:'Industrial AI and digital-twin software',assessment:'M',sourceId:'company-site',sourceCompanyId:'nvda'},
+      {id:'rel-009',type:'supply',supplierId:'asml',customerId:'tsm',product:'EUV and DUV lithography systems',assessment:'H',sourceId:'sec-search',sourceCompanyId:'asml',critical:true},
+      {id:'rel-010',type:'supply',supplierId:'asml',customerId:'ssn',product:'Lithography systems',assessment:'H',sourceId:'sec-search',sourceCompanyId:'asml',critical:false},
+      {id:'rel-011',type:'supply',supplierId:'asml',customerId:'intc',product:'EUV lithography systems for leading-edge nodes',assessment:'H',sourceId:'intel-10k-2025',sourceCompanyId:'intc',evidenceStatus:'primary',evidenceNote:'Intel identifies ASML as the sole supplier of the EUV lithography tools it deploys for leading-edge process nodes.',critical:true},
+      // Corrected direction: TSMC provides outsourced wafer fabrication to Intel.
+      {id:'rel-012',type:'supply',supplierId:'tsm',customerId:'intc',product:'Outsourced wafer fabrication (select products)',assessment:'M',sourceId:'company-site',sourceCompanyId:'tsm',critical:false},
+      {id:'rel-013',type:'supply',supplierId:'zeiss',customerId:'asml',product:'Optical columns and critical lithography optics',assessment:'H',sourceId:'asml-10k-2025',sourceCompanyId:'asml',evidenceStatus:'primary',evidenceNote:'ASML identifies Carl Zeiss SMT as its single supplier of optical columns and key optical components for lithography systems.',critical:true},
+      {id:'rel-014',type:'supply',supplierId:'tsm',customerId:'amd',product:'Wafer fabrication for HPC, FPGA, adaptive SoC, CPU and GPU products',assessment:'H',sourceId:'amd-10q-2026',sourceCompanyId:'amd',evidenceStatus:'primary',evidenceNote:'AMD states it relies on TSMC for wafers for microprocessor and GPU products at 7nm and smaller nodes, and uses it for other ICs.',critical:false},
+      {id:'rel-015',type:'supply',supplierId:'amd',customerId:'msft',product:'Semi-custom console chips; Instinct GPUs',assessment:'M',sourceId:'company-site',sourceCompanyId:'amd',critical:false},
+      {id:'rel-016',type:'supply',supplierId:'tsm',customerId:'aapl',product:'Foundry: A- and M-series chips',assessment:'M',sourceId:'apple-suppliers',sourceCompanyId:'aapl',critical:false},
+      {id:'rel-017',type:'supply',supplierId:'fox',customerId:'aapl',product:'Final device assembly',assessment:'H',sourceId:'apple-suppliers',sourceCompanyId:'aapl',critical:false},
+      {id:'rel-018',type:'supply',supplierId:'ssn',customerId:'aapl',product:'Displays and memory',assessment:'M',sourceId:'apple-suppliers',sourceCompanyId:'aapl',critical:false},
+      {id:'rel-019',type:'competitor',companyA:'skh',companyB:'ssn',product:'DRAM and HBM',assessment:'M',sourceId:'company-site',sourceCompanyId:'skh'},
+      {id:'rel-020',type:'supply',supplierId:'saf',customerId:'air',product:'Engines (via CFM), landing gear',assessment:'M',sourceId:'company-site',sourceCompanyId:'air',critical:false},
+      {id:'rel-021',type:'supply',supplierId:'tho',customerId:'air',product:'Avionics and on-board systems',assessment:'M',sourceId:'company-site',sourceCompanyId:'air',critical:false},
+      {id:'rel-022',type:'partner',companyA:'air',companyB:'ldo',product:'Eurofighter consortium (with BAE Systems)',assessment:'H',sourceId:'eurofighter',sourceCompanyId:'air'},
+      {id:'rel-023',type:'partner',companyA:'ldo',companyB:'rhm',product:'Leonardo Rheinmetall Military Vehicles JV',assessment:'H',sourceId:'company-site',sourceCompanyId:'ldo'},
+
+      // NVIDIA: all five of these supplier categories are named in NVIDIA's FY2026 Form 10-K.
+      {id:'rel-024',type:'supply',supplierId:'fox',customerId:'nvda',product:'Contract manufacturing: assembly, testing and packaging',assessment:'H',sourceId:'nvda-10k-2026',evidenceStatus:'primary',evidenceNote:'NVIDIA names Hon Hai (Foxconn) among independent subcontractors and contract manufacturers for final-product assembly, testing and packaging.'},
+      {id:'rel-025',type:'supply',supplierId:'wistron',customerId:'nvda',product:'Contract manufacturing: assembly, testing and packaging',assessment:'H',sourceId:'nvda-10k-2026',evidenceStatus:'primary',evidenceNote:'NVIDIA names Wistron among independent subcontractors and contract manufacturers for final-product assembly, testing and packaging.'},
+      {id:'rel-026',type:'supply',supplierId:'fabrinet',customerId:'nvda',product:'Contract manufacturing: assembly, testing and packaging',assessment:'H',sourceId:'nvda-10k-2026',evidenceStatus:'primary',evidenceNote:'NVIDIA names Fabrinet among independent subcontractors and contract manufacturers for final-product assembly, testing and packaging.'},
+
+      // AMD: its FY2026 filing describes these foundry and packaging/test arrangements.
+      {id:'rel-027',type:'supply',supplierId:'gf',customerId:'amd',product:'Wafer fabrication for HPC products at selected mature nodes',assessment:'H',sourceId:'amd-10q-2026',evidenceStatus:'primary',evidenceNote:'AMD identifies GlobalFoundries as a wafer supplier for HPC products at nodes larger than 7nm.'},
+      {id:'rel-028',type:'supply',supplierId:'umc',customerId:'amd',product:'Wafer fabrication for programmable-logic-device ICs',assessment:'H',sourceId:'amd-10q-2026',evidenceStatus:'primary',evidenceNote:'AMD identifies UMC among foundries used for programmable-logic-device ICs.'},
+      {id:'rel-029',type:'supply',supplierId:'ssn',customerId:'amd',product:'Wafer fabrication for programmable-logic-device ICs',assessment:'H',sourceId:'amd-10q-2026',evidenceStatus:'primary',evidenceNote:'AMD identifies Samsung among foundries used for programmable-logic-device ICs; this is not a claim that Samsung fabricates AMD CPUs or GPUs.'},
+      {id:'rel-030',type:'supply',supplierId:'tongfu',customerId:'amd',product:'Assembly, test, mark and packaging (ATMP) services',assessment:'H',sourceId:'amd-10q-2026',evidenceStatus:'primary',evidenceNote:'AMD identifies its joint ventures with Tongfu as ATMP service providers.'},
+      {id:'rel-031',type:'supply',supplierId:'aseh',customerId:'amd',product:'Assembly, test, mark and packaging via Siliconware Precision Industries (SPIL)',assessment:'H',sourceId:'amd-10q-2026',evidenceStatus:'primary',evidenceNote:'AMD identifies Siliconware Precision Industries (SPIL) as an ATMP partner; SPIL is included here under the ASE Technology group.'},
+
+      // Qualcomm: supplier names are stated in its FY2026 Form 10-K.
+      {id:'rel-032',type:'supply',supplierId:'tsm',customerId:'qcom',product:'Wafer fabrication for digital, analog/mixed-signal, RF and PM ICs',assessment:'H',sourceId:'qcom-10k-2026',evidenceStatus:'primary',evidenceNote:'Qualcomm names TSMC among its primary foundry suppliers.'},
+      {id:'rel-033',type:'supply',supplierId:'ssn',customerId:'qcom',product:'Wafer fabrication and memory components',assessment:'H',sourceId:'qcom-10k-2026',evidenceStatus:'primary',evidenceNote:'Qualcomm names Samsung as a primary foundry and memory supplier.'},
+      {id:'rel-034',type:'supply',supplierId:'gf',customerId:'qcom',product:'Wafer fabrication for integrated circuits',assessment:'H',sourceId:'qcom-10k-2026',evidenceStatus:'primary',evidenceNote:'Qualcomm names GlobalFoundries among its primary foundry suppliers.'},
+      {id:'rel-035',type:'supply',supplierId:'mu',customerId:'qcom',product:'Memory components for selected products, including automotive',assessment:'H',sourceId:'qcom-10k-2026',evidenceStatus:'primary',evidenceNote:'Qualcomm names Micron as a memory supplier.'},
+      {id:'rel-036',type:'supply',supplierId:'amkr',customerId:'qcom',product:'Semiconductor assembly and test services',assessment:'H',sourceId:'qcom-10k-2026',evidenceStatus:'primary',evidenceNote:'Qualcomm names Amkor Technology among its primary semiconductor assembly and test suppliers.'},
+      {id:'rel-037',type:'supply',supplierId:'aseh',customerId:'qcom',product:'Semiconductor assembly and test services',assessment:'H',sourceId:'qcom-10k-2026',evidenceStatus:'primary',evidenceNote:'Qualcomm names Advanced Semiconductor Engineering and Siliconware Precision Industries among its primary assembly and test suppliers.'},
+      {id:'rel-038',type:'supply',supplierId:'stts',customerId:'qcom',product:'Semiconductor assembly and test services',assessment:'H',sourceId:'qcom-10k-2026',evidenceStatus:'primary',evidenceNote:'Qualcomm names STATS ChipPAC among its primary semiconductor assembly and test suppliers.'},
+
+      // Lam Research: FY2026 Form 10-K names these firms as significant customers.
+      {id:'rel-039',type:'supply',supplierId:'lam',customerId:'mu',product:'Wafer fabrication equipment and services',assessment:'H',sourceId:'lam-10k-2026',evidenceStatus:'primary',evidenceNote:'Lam Research names Micron among its most significant customers during FY2024–FY2026.'},
+      {id:'rel-040',type:'supply',supplierId:'lam',customerId:'ssn',product:'Wafer fabrication equipment and services',assessment:'H',sourceId:'lam-10k-2026',evidenceStatus:'primary',evidenceNote:'Lam Research names Samsung among its most significant customers during FY2024–FY2026.'},
+      {id:'rel-041',type:'supply',supplierId:'lam',customerId:'skh',product:'Wafer fabrication equipment and services',assessment:'H',sourceId:'lam-10k-2026',evidenceStatus:'primary',evidenceNote:'Lam Research names SK hynix among its most significant customers during FY2024–FY2026.'},
+      {id:'rel-042',type:'supply',supplierId:'lam',customerId:'tsm',product:'Wafer fabrication equipment and services',assessment:'H',sourceId:'lam-10k-2026',evidenceStatus:'primary',evidenceNote:'Lam Research names TSMC among its most significant customers during FY2024–FY2026.'},
+
+      // F-35 programme: official Lockheed Martin and BAE Systems disclosures.
+      {id:'rel-043',type:'supply',supplierId:'bae',customerId:'lmt',product:'F-35 structures, electronic warfare and aircraft systems',assessment:'H',sourceId:'f35-lockheed',evidenceStatus:'official',evidenceNote:'Lockheed Martin identifies BAE Systems as a major F-35 partner; BAE also reports a 2026 F-35 electronic-warfare contract from Lockheed Martin.'},
+      {id:'rel-044',type:'partner',companyA:'noc',companyB:'lmt',product:'F-35 programme partnership: centre fuselage, radar and mission systems',assessment:'H',sourceId:'f35-lockheed',evidenceStatus:'official',evidenceNote:'Lockheed Martin identifies Northrop Grumman as a major F-35 partner and describes its programme role; this is shown as a programme partnership rather than asserting a direct purchase contract.'},
+      {id:'rel-045',type:'partner',companyA:'rtx',companyB:'lmt',product:'F-35 programme partnership: propulsion, aircraft systems, sensors and weapons',assessment:'H',sourceId:'f35-lockheed',evidenceStatus:'official',evidenceNote:'Lockheed Martin identifies RTX as a major F-35 partner and describes contributions from Pratt & Whitney, Collins Aerospace and Raytheon; this is a programme partnership record, not a claim about a specific direct purchase contract.'},
+
+      // Publicly announced Airbus sales/deliveries and engine integration.
+      {id:'rel-046',type:'supply',supplierId:'air',customerId:'delta',product:'31 additional widebody aircraft: 16 A330-900s and 15 A350-900s',assessment:'H',sourceId:'airbus-delta-2026',evidenceStatus:'official',evidenceNote:'Airbus announced Delta’s firm order on 28 January 2026.'},
+      {id:'rel-047',type:'supply',supplierId:'air',customerId:'lufthansa',product:'10 additional Airbus A350-900 aircraft',assessment:'H',sourceId:'airbus-lufthansa-2026',evidenceStatus:'official',evidenceNote:'Airbus announced Lufthansa Group’s firm order on 12 May 2026.'},
+      {id:'rel-048',type:'supply',supplierId:'air',customerId:'klm',product:'A350-900 aircraft delivery',assessment:'H',sourceId:'airbus-klm-2026',evidenceStatus:'official',evidenceNote:'Airbus announced KLM’s first A350-900 delivery on 2 October 2026.'},
+      {id:'rel-049',type:'supply',supplierId:'rr',customerId:'air',product:'Trent XWB engines for Airbus A350 aircraft',assessment:'H',sourceId:'airbus-klm-2026',evidenceStatus:'official',evidenceNote:'Airbus’ KLM A350 delivery announcement states that the aircraft is equipped with Rolls-Royce engines.'}
+    ];
+
+    const NAV = [
+      ['overview','Overview'],['explorer','Company Explorer'],['suppliers','Suppliers'],
+      ['customers','Customers'],['watchlist','Watchlist'],['map','Supply Chain Map'],
+      ['industry','Industry Intelligence'],['news','News & Events']
+    ];
+    const TYPE_LABEL = {supply:'Supply relationship',competitor:'Competitor',partner:'Partnership'};
+    const DATA_REVIEWED_ON = '23 Nov 2026';
+    const TYPE_COLOR = {supplier:'#22d3ee',customer:'#4f8cff',competitor:'#f0616d',partner:'#a78bfa',center:'#f5b942'};
+    const CONFIDENCE_LABEL = {H:'High assessment',M:'Medium assessment',L:'Low assessment'};
+    const companyById = Object.fromEntries(COMPANIES.map(company => [company.id, company]));
+    const state = {
+      view:'overview', selectedCompany:'nvda', depth:3,
+      filters:{suppliers:true,customers:true,competitor:true,partner:true},
+      tableFilter:'', graphFilter:'', watchlist:loadWatchlist(), searchMatches:[], searchIndex:-1,
+      mapSelected:'', mapSearch:'', mapCountry:'all', mapIndustry:'all', mapFacilityType:'all', mapShowHQ:true, mapShowFacilities:true, mapShowLinks:true, mapZoom:1
+    };
+
+    // Approximate city-centre coordinates for each company's stated HQ city.
+    // These are locator pins, not street addresses or factory/site coordinates.
+    const HQ_COORDS = {
+      nvda:[-121.955,37.354,'Santa Clara'], tsm:[120.964,24.804,'Hsinchu'],
+      asml:[5.403,51.419,'Veldhoven'], amd:[-121.955,37.354,'Santa Clara'],
+      msft:[-122.121,47.674,'Redmond'], aapl:[-122.032,37.323,'Cupertino'],
+      ssn:[127.009,37.263,'Suwon'], skh:[127.435,37.272,'Icheon'],
+      mu:[-116.202,43.615,'Boise'], intc:[-121.955,37.354,'Santa Clara'],
+      zeiss:[10.104,48.783,'Oberkochen'], fox:[121.465,25.013,'New Taipei'],
+      air:[1.444,43.604,'Toulouse'], saf:[2.352,48.857,'Paris'],
+      tho:[2.352,48.857,'Paris'], ldo:[12.496,41.903,'Rome'],
+      rhm:[6.773,51.227,'Düsseldorf'], sie:[11.576,48.137,'Munich'],
+      wistron:[121.465,25.013,'New Taipei'], fabrinet:[100.52,14.02,'Pathum Thani'],
+      gf:[-73.79,42.999,'Malta, New York'], umc:[120.964,24.804,'Hsinchu'],
+      qcom:[-117.161,32.716,'San Diego'], amkr:[-111.94,33.425,'Tempe'],
+      aseh:[120.301,22.627,'Kaohsiung'], stts:[103.819,1.352,'Singapore'],
+      tongfu:[120.894,31.98,'Nantong'], lam:[-121.988,37.548,'Fremont'],
+      lmt:[-77.1,38.984,'Bethesda'], noc:[-77.171,38.882,'Falls Church'],
+      bae:[-0.127,51.507,'London'], rtx:[-77.106,38.879,'Arlington'],
+      rr:[-0.127,51.507,'London'], delta:[-84.388,33.749,'Atlanta'],
+      lufthansa:[6.96,50.94,'Cologne'], klm:[4.863,52.301,'Amstelveen']
+    };
+    const MAP_LAND = [
+      [[-168,66],[-155,70],[-145,65],[-137,59],[-130,55],[-126,49],[-124,42],[-117,33],[-111,28],[-105,23],[-98,19],[-91,18],[-85,21],[-82,26],[-80,32],[-75,37],[-68,45],[-60,50],[-55,55],[-63,59],[-78,61],[-90,67],[-108,72],[-128,71],[-150,70]],
+      [[-52,59],[-43,60],[-35,70],[-42,82],[-55,82],[-62,75]],
+      [[-81,12],[-75,9],[-70,2],[-74,-7],[-70,-17],[-66,-27],[-62,-38],[-69,-54],[-75,-48],[-78,-28],[-80,-8]],
+      [[-11,36],[-10,50],[-5,56],[4,59],[10,66],[21,71],[35,68],[48,61],[61,62],[76,70],[94,73],[112,68],[132,58],[148,53],[163,58],[177,56],[180,48],[169,43],[154,39],[145,33],[134,28],[127,20],[116,9],[105,5],[98,12],[89,21],[77,8],[67,10],[56,23],[46,29],[37,34],[29,40],[20,38],[12,42],[4,40],[-4,36]],
+      [[-17,35],[-5,37],[10,37],[24,33],[34,30],[43,12],[50,10],[45,-1],[39,-12],[34,-25],[22,-35],[11,-35],[2,-27],[-6,-12],[-14,4],[-17,18]],
+      [[112,-11],[125,-10],[139,-13],[151,-22],[153,-29],[145,-39],[132,-44],[117,-36],[113,-25]],
+      [[47,-13],[50,-17],[49,-25],[45,-24]],
+      [[129,31],[132,34],[136,37],[140,42],[144,44],[146,40],[142,35],[137,33]],
+      [[95,5],[108,7],[119,2],[131,-2],[140,-7],[133,-10],[121,-7],[111,-5],[101,-3]]
+    ];
+
+    function industryGroup(company) {
+      const text = company.industry.toLowerCase();
+      if (text.includes('airline')) return 'Airlines';
+      if (text.includes('aerospace') || text.includes('defence') || text.includes('defense')) return 'Aerospace & Defence';
+      if (text.includes('semiconductor') || text.includes('semiconductors')) return 'Semiconductors & Equipment';
+      if (text.includes('electronics manufacturing') || text.includes('packaging') || text.includes('optics') || text.includes('optical')) return 'Electronics & Manufacturing';
+      if (text.includes('software') || text.includes('cloud')) return 'Software & Cloud';
+      return 'Industrial Technology';
+    }
+    const MAP_GROUP_COLORS = {
+      'Semiconductors & Equipment':'#22d3ee', 'Electronics & Manufacturing':'#4f8cff',
+      'Aerospace & Defence':'#f5b942', 'Airlines':'#a78bfa',
+      'Software & Cloud':'#34d399', 'Industrial Technology':'#fb8c67'
+    };
+    const MAP_INDUSTRIES = [...new Set(COMPANIES.map(industryGroup))].sort();
+    const FACILITY_TYPE_LABEL = {
+      fab:'Semiconductor fab', manufacturing:'Manufacturing site',
+      'assembly-test':'Assembly & test site', 'aircraft-assembly':'Aircraft final-assembly line'
+    };
+    // Publicly named facility/campus clusters. A marker represents a city/site cluster,
+    // not the exact footprint of an individual building. Each item carries its own source.
+    const FACILITIES = [
+      // TSMC public fabs and manufacturing subsidiaries (official fabs directory / FY2025 annual report).
+      {id:'tsm-hsinchu',companyId:'tsm',name:'Hsinchu fab cluster',city:'Hsinchu',country:'Taiwan',lon:120.964,lat:24.804,type:'fab',sourceTitle:'TSMC fabs directory',sourceUrl:'https://wwwpoc.cld.tsmc.com/english/aboutTSMC/TSMC_Fabs',note:'TSMC lists multiple fabs and advanced-backend facilities in Hsinchu Science Park.'},
+      {id:'tsm-taichung',companyId:'tsm',name:'Central Taiwan fab cluster',city:'Taichung',country:'Taiwan',lon:120.673,lat:24.147,type:'fab',sourceTitle:'TSMC FY2025 annual report',sourceUrl:'https://investor.tsmc.com/static/annualReports/2025/english/index.html',note:'The annual report identifies fabs in Central Taiwan Science Park.'},
+      {id:'tsm-tainan',companyId:'tsm',name:'Southern Taiwan fab cluster',city:'Tainan',country:'Taiwan',lon:120.227,lat:22.999,type:'fab',sourceTitle:'TSMC fabs directory',sourceUrl:'https://wwwpoc.cld.tsmc.com/english/aboutTSMC/TSMC_Fabs',note:'TSMC lists Fab 18 and other facilities in Southern Taiwan Science Park.'},
+      {id:'tsm-kaohsiung',companyId:'tsm',name:'Fab 22',city:'Kaohsiung',country:'Taiwan',lon:120.301,lat:22.627,type:'fab',sourceTitle:'TSMC fabs directory',sourceUrl:'https://wwwpoc.cld.tsmc.com/english/aboutTSMC/TSMC_Fabs',note:'TSMC lists Fab 22 in Nanzi District, Kaohsiung.'},
+      {id:'tsm-arizona',companyId:'tsm',name:'TSMC Arizona fab site',city:'Phoenix',country:'United States',lon:-112.074,lat:33.448,type:'fab',sourceTitle:'TSMC Arizona',sourceUrl:'https://www.tsmc.com/static/abouttsmcaz/index.htm',note:'TSMC describes its Arizona manufacturing site and fab expansion programme.'},
+      {id:'tsm-kumamoto',companyId:'tsm',name:'JASM / Kumamoto fab site',city:'Kumamoto',country:'Japan',lon:130.741,lat:32.803,type:'fab',sourceTitle:'TSMC fabs directory',sourceUrl:'https://wwwpoc.cld.tsmc.com/english/aboutTSMC/TSMC_Fabs',note:'TSMC lists Japan Advanced Semiconductor Manufacturing in Kumamoto.'},
+      {id:'tsm-nanjing',companyId:'tsm',name:'Fab 16',city:'Nanjing',country:'China',lon:118.797,lat:32.060,type:'fab',sourceTitle:'TSMC fabs directory',sourceUrl:'https://wwwpoc.cld.tsmc.com/english/aboutTSMC/TSMC_Fabs',note:'TSMC lists TSMC Nanjing Company and Fab 16 in Nanjing.'},
+      {id:'tsm-shanghai',companyId:'tsm',name:'Fab 10',city:'Shanghai',country:'China',lon:121.474,lat:31.230,type:'fab',sourceTitle:'TSMC fabs directory',sourceUrl:'https://wwwpoc.cld.tsmc.com/english/aboutTSMC/TSMC_Fabs',note:'TSMC lists TSMC China Company Limited, Fab 10, in Shanghai.'},
+      {id:'tsm-camas',companyId:'tsm',name:'TSMC Washington / Fab 11',city:'Camas',country:'United States',lon:-122.405,lat:45.588,type:'fab',sourceTitle:'TSMC fabs directory',sourceUrl:'https://wwwpoc.cld.tsmc.com/english/aboutTSMC/TSMC_Fabs',note:'TSMC lists TSMC Washington, LLC and Fab 11 in Camas, Washington.'},
+
+      // Intel manufacturing locations listed in Intel's manufacturing-fab support article.
+      {id:'intc-chandler',companyId:'intc',name:'Arizona wafer-fab site',city:'Chandler',country:'United States',lon:-111.841,lat:33.306,type:'fab',sourceTitle:'Intel: fab production sites',sourceUrl:'https://www.intel.com/content/www/us/en/support/articles/000089875/programs/intel-corporation.html',note:'Intel lists Chandler, Arizona among its wafer-fab production locations.'},
+      {id:'intc-rio-rancho',companyId:'intc',name:'New Mexico wafer-fab site',city:'Rio Rancho',country:'United States',lon:-106.664,lat:35.233,type:'fab',sourceTitle:'Intel: fab production sites',sourceUrl:'https://www.intel.com/content/www/us/en/support/articles/000089875/programs/intel-corporation.html',note:'Intel lists Rio Rancho, New Mexico among its wafer-fab production locations.'},
+      {id:'intc-hillsboro',companyId:'intc',name:'Oregon wafer-fab site',city:'Hillsboro',country:'United States',lon:-122.989,lat:45.522,type:'fab',sourceTitle:'Intel: fab production sites',sourceUrl:'https://www.intel.com/content/www/us/en/support/articles/000089875/programs/intel-corporation.html',note:'Intel lists Hillsboro, Oregon among its wafer-fab production locations.'},
+      {id:'intc-leixlip',companyId:'intc',name:'Ireland wafer-fab site',city:'Leixlip',country:'Ireland',lon:-6.495,lat:53.365,type:'fab',sourceTitle:'Intel: fab production sites',sourceUrl:'https://www.intel.com/content/www/us/en/support/articles/000089875/programs/intel-corporation.html',note:'Intel lists Leixlip, Ireland among its wafer-fab production locations.'},
+      {id:'intc-jerusalem',companyId:'intc',name:'Jerusalem wafer-fab site',city:'Jerusalem',country:'Israel',lon:35.214,lat:31.768,type:'fab',sourceTitle:'Intel: fab production sites',sourceUrl:'https://www.intel.com/content/www/us/en/support/articles/000089875/programs/intel-corporation.html',note:'Intel lists Jerusalem among its wafer-fab production locations.'},
+      {id:'intc-kiryat-gat',companyId:'intc',name:'Kiryat Gat wafer-fab site',city:'Kiryat Gat',country:'Israel',lon:34.77,lat:31.61,type:'fab',sourceTitle:'Intel: fab production sites',sourceUrl:'https://www.intel.com/content/www/us/en/support/articles/000089875/programs/intel-corporation.html',note:'Intel lists Kiryat Gat among its wafer-fab production locations.'},
+      {id:'intc-shanghai',companyId:'intc',name:'Shanghai assembly / test site',city:'Shanghai',country:'China',lon:121.474,lat:31.230,type:'assembly-test',sourceTitle:'Intel: manufacturing locations',sourceUrl:'https://www.intel.com/content/www/us/en/support/articles/000089875/programs/intel-corporation.html',note:'Intel lists Shanghai among its assembly and test locations.'},
+      {id:'intc-chengdu',companyId:'intc',name:'Chengdu assembly / test site',city:'Chengdu',country:'China',lon:104.066,lat:30.572,type:'assembly-test',sourceTitle:'Intel: manufacturing locations',sourceUrl:'https://www.intel.com/content/www/us/en/support/articles/000089875/programs/intel-corporation.html',note:'Intel lists Chengdu among its assembly and test locations.'},
+      {id:'intc-sanjose-cr',companyId:'intc',name:'Costa Rica assembly / test site',city:'San José',country:'Costa Rica',lon:-84.091,lat:9.928,type:'assembly-test',sourceTitle:'Intel: manufacturing locations',sourceUrl:'https://www.intel.com/content/www/us/en/support/articles/000089875/programs/intel-corporation.html',note:'Intel lists San Jose, Costa Rica among its assembly and test locations.'},
+      {id:'intc-kulim',companyId:'intc',name:'Kulim assembly / test site',city:'Kulim',country:'Malaysia',lon:100.552,lat:5.365,type:'assembly-test',sourceTitle:'Intel: manufacturing locations',sourceUrl:'https://www.intel.com/content/www/us/en/support/articles/000089875/programs/intel-corporation.html',note:'Intel lists Kulim among its assembly and test locations.'},
+      {id:'intc-penang',companyId:'intc',name:'Penang assembly / test site',city:'Penang',country:'Malaysia',lon:100.329,lat:5.414,type:'assembly-test',sourceTitle:'Intel: manufacturing locations',sourceUrl:'https://www.intel.com/content/www/us/en/support/articles/000089875/programs/intel-corporation.html',note:'Intel lists Penang among its assembly and test locations.'},
+      {id:'intc-ho-chi-minh',companyId:'intc',name:'Ho Chi Minh City assembly / test site',city:'Ho Chi Minh City',country:'Vietnam',lon:106.630,lat:10.823,type:'assembly-test',sourceTitle:'Intel: manufacturing locations',sourceUrl:'https://www.intel.com/content/www/us/en/support/articles/000089875/programs/intel-corporation.html',note:'Intel lists Ho Chi Minh City among its assembly and test locations.'},
+
+      // Micron manufacturing locations from its corporate profile.
+      {id:'mu-boise',companyId:'mu',name:'Boise manufacturing site',city:'Boise',country:'United States',lon:-116.202,lat:43.615,type:'manufacturing',sourceTitle:'Micron corporate profile',sourceUrl:'https://sg.micron.com/about/company/corporate-profile',note:'Micron lists Boise among its manufacturing locations.'},
+      {id:'mu-gujarat',companyId:'mu',name:'Gujarat manufacturing site',city:'Gujarat',country:'India',lon:72.636,lat:23.215,type:'manufacturing',sourceTitle:'Micron corporate profile',sourceUrl:'https://sg.micron.com/about/company/corporate-profile',note:'Micron lists Gujarat among its manufacturing locations; the marker is an approximate regional locator.'},
+      {id:'mu-hiroshima',companyId:'mu',name:'Hiroshima manufacturing site',city:'Hiroshima',country:'Japan',lon:132.455,lat:34.385,type:'manufacturing',sourceTitle:'Micron corporate profile',sourceUrl:'https://sg.micron.com/about/company/corporate-profile',note:'Micron lists Hiroshima among its manufacturing locations.'},
+      {id:'mu-manassas',companyId:'mu',name:'Manassas manufacturing site',city:'Manassas',country:'United States',lon:-77.475,lat:38.751,type:'manufacturing',sourceTitle:'Micron corporate profile',sourceUrl:'https://sg.micron.com/about/company/corporate-profile',note:'Micron lists Manassas among its manufacturing locations.'},
+      {id:'mu-muar',companyId:'mu',name:'Muar manufacturing site',city:'Muar',country:'Malaysia',lon:102.568,lat:2.044,type:'manufacturing',sourceTitle:'Micron corporate profile',sourceUrl:'https://sg.micron.com/about/company/corporate-profile',note:'Micron lists Muar among its manufacturing locations.'},
+      {id:'mu-penang',companyId:'mu',name:'Penang manufacturing site',city:'Penang',country:'Malaysia',lon:100.329,lat:5.414,type:'manufacturing',sourceTitle:'Micron corporate profile',sourceUrl:'https://sg.micron.com/about/company/corporate-profile',note:'Micron lists Penang among its manufacturing locations.'},
+      {id:'mu-singapore',companyId:'mu',name:'Singapore manufacturing site',city:'Singapore',country:'Singapore',lon:103.819,lat:1.352,type:'manufacturing',sourceTitle:'Micron corporate profile',sourceUrl:'https://sg.micron.com/about/company/corporate-profile',note:'Micron lists Singapore among its manufacturing locations.'},
+      {id:'mu-taichung',companyId:'mu',name:'Taichung manufacturing site',city:'Taichung',country:'Taiwan',lon:120.673,lat:24.147,type:'manufacturing',sourceTitle:'Micron corporate profile',sourceUrl:'https://sg.micron.com/about/company/corporate-profile',note:'Micron lists Taichung among its manufacturing locations.'},
+      {id:'mu-tainan',companyId:'mu',name:'Tainan manufacturing site',city:'Tainan',country:'Taiwan',lon:120.227,lat:22.999,type:'manufacturing',sourceTitle:'Micron corporate profile',sourceUrl:'https://sg.micron.com/about/company/corporate-profile',note:'Micron lists Tainan among its manufacturing locations.'},
+      {id:'mu-taoyuan',companyId:'mu',name:'Taoyuan manufacturing site',city:'Taoyuan',country:'Taiwan',lon:121.301,lat:24.993,type:'manufacturing',sourceTitle:'Micron corporate profile',sourceUrl:'https://sg.micron.com/about/company/corporate-profile',note:'Micron lists Taoyuan among its manufacturing locations.'},
+      {id:'mu-xian',companyId:'mu',name:'Xi’an manufacturing site',city:'Xi’an',country:'China',lon:108.939,lat:34.341,type:'manufacturing',sourceTitle:'Micron corporate profile',sourceUrl:'https://sg.micron.com/about/company/corporate-profile',note:'Micron lists Xi’an among its manufacturing locations.'},
+
+      // Four GlobalFoundries manufacturing fabs.
+      {id:'gf-malta',companyId:'gf',name:'Malta fab',city:'Malta, New York',country:'United States',lon:-73.79,lat:42.999,type:'fab',sourceTitle:'GF global manufacturing footprint',sourceUrl:'https://investors.gf.com/static-files/9aecbb31-1a7a-43a5-b1ed-d5e0d4380cee',note:'GF identifies Malta, New York as one of its four manufacturing sites.'},
+      {id:'gf-burlington',companyId:'gf',name:'Burlington fab',city:'Burlington',country:'United States',lon:-73.212,lat:44.475,type:'fab',sourceTitle:'GF global manufacturing footprint',sourceUrl:'https://investors.gf.com/static-files/9aecbb31-1a7a-43a5-b1ed-d5e0d4380cee',note:'GF identifies Burlington, Vermont as one of its four manufacturing sites.'},
+      {id:'gf-dresden',companyId:'gf',name:'Dresden fab',city:'Dresden',country:'Germany',lon:13.738,lat:51.05,type:'fab',sourceTitle:'GF global manufacturing footprint',sourceUrl:'https://investors.gf.com/static-files/9aecbb31-1a7a-43a5-b1ed-d5e0d4380cee',note:'GF identifies Dresden as one of its four manufacturing sites.'},
+      {id:'gf-singapore',companyId:'gf',name:'Singapore fab',city:'Singapore',country:'Singapore',lon:103.819,lat:1.352,type:'fab',sourceTitle:'GF global manufacturing footprint',sourceUrl:'https://investors.gf.com/static-files/9aecbb31-1a7a-43a5-b1ed-d5e0d4380cee',note:'GF identifies Singapore as one of its four manufacturing sites.'},
+
+      // Airbus commercial-aircraft final assembly locations.
+      {id:'air-toulouse',companyId:'air',name:'Toulouse final-assembly lines',city:'Toulouse',country:'France',lon:1.444,lat:43.604,type:'aircraft-assembly',sourceTitle:'Airbus: final assembly line network',sourceUrl:'https://www.airbus.com/en/newsroom/press-releases/2026-06-airbus-inaugurates-new-a320-family-final-assembly-line-in-toulouse',note:'Airbus identifies Toulouse as a global A320 Family final-assembly location.'},
+      {id:'air-hamburg',companyId:'air',name:'Hamburg final-assembly lines',city:'Hamburg',country:'Germany',lon:9.993,lat:53.551,type:'aircraft-assembly',sourceTitle:'Airbus: global final assembly lines',sourceUrl:'https://www.airbus.com/en/products-services/commercial-aircraft/the-life-cycle-of-an-aircraft/production',note:'Airbus identifies Hamburg as an A320 Family final-assembly location.'},
+      {id:'air-mobile',companyId:'air',name:'Mobile final-assembly lines',city:'Mobile',country:'United States',lon:-88.04,lat:30.695,type:'aircraft-assembly',sourceTitle:'Airbus: global final assembly lines',sourceUrl:'https://www.airbus.com/en/products-services/commercial-aircraft/the-life-cycle-of-an-aircraft/production',note:'Airbus identifies Mobile, Alabama as an A320 Family and A220 single-aisle aircraft build-up location.'},
+      {id:'air-tianjin',companyId:'air',name:'Tianjin final-assembly lines',city:'Tianjin',country:'China',lon:117.2,lat:39.085,type:'aircraft-assembly',sourceTitle:'Airbus: global final assembly lines',sourceUrl:'https://www.airbus.com/en/products-services/commercial-aircraft/the-life-cycle-of-an-aircraft/production',note:'Airbus identifies Tianjin as an A320 Family final-assembly location.'}
+    ];
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    }
+    function safeUrl(value) {
+      try { const url = new URL(value); return ['http:','https:'].includes(url.protocol) ? url.href : '#'; }
+      catch { return '#'; }
+    }
+    function companyLink(id, label) {
+      const company = companyById[id];
+      if (!company) return escapeHtml(label || 'Unknown company');
+      return `<button type="button" class="company-link" data-open-company="${escapeHtml(id)}">${escapeHtml(label || company.name)}</button>`;
+    }
+    function externalLink(url, label) {
+      const href = safeUrl(url);
+      if (href === '#') return `<span class="muted">${escapeHtml(label)}</span>`;
+      return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
+    }
+    function loadWatchlist() {
+      try {
+        const raw = localStorage.getItem('sci_watchlist');
+        const value = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(value)) return [];
+        return [...new Set(value.filter(id => typeof id === 'string' && Object.hasOwn(companyById, id)))];
+      } catch (error) { return []; }
+    }
+    function saveWatchlist() {
+      try { localStorage.setItem('sci_watchlist', JSON.stringify(state.watchlist)); return true; }
+      catch (error) { notify('The browser blocked local storage. Your change may not persist after refresh.'); return false; }
+    }
+    function notify(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message; toast.classList.add('show');
+      window.clearTimeout(notify.timer);
+      notify.timer = window.setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+    function validateData() {
+      const errors = [];
+      const allowed = ['supply','competitor','partner'];
+      for (const rel of RELATIONSHIPS) {
+        if (!allowed.includes(rel.type)) errors.push(`${rel.id}: unsupported type`);
+        if (rel.type === 'supply') {
+          if (!companyById[rel.supplierId] || !companyById[rel.customerId]) errors.push(`${rel.id}: invalid supplier/customer ID`);
+          if (rel.supplierId === rel.customerId) errors.push(`${rel.id}: self-supply relationship`);
+        } else if (!companyById[rel.companyA] || !companyById[rel.companyB]) errors.push(`${rel.id}: invalid company ID`);
+        if (!SOURCES[rel.sourceId]) errors.push(`${rel.id}: missing source metadata`);
+      }
+      return errors;
+    }
+    const DATA_ERRORS = validateData();
+    if (DATA_ERRORS.length) console.error('Supply-chain data validation errors:', DATA_ERRORS);
+
+    const supplyByCustomer = new Map();
+    const supplyBySupplier = new Map();
+    const relationsByCompany = new Map(COMPANIES.map(company => [company.id, []]));
+    for (const rel of RELATIONSHIPS) {
+      if (rel.type === 'supply') {
+        if (!supplyByCustomer.has(rel.customerId)) supplyByCustomer.set(rel.customerId, []);
+        if (!supplyBySupplier.has(rel.supplierId)) supplyBySupplier.set(rel.supplierId, []);
+        supplyByCustomer.get(rel.customerId).push(rel);
+        supplyBySupplier.get(rel.supplierId).push(rel);
+        relationsByCompany.get(rel.customerId)?.push(rel);
+        relationsByCompany.get(rel.supplierId)?.push(rel);
+      } else {
+        relationsByCompany.get(rel.companyA)?.push(rel);
+        relationsByCompany.get(rel.companyB)?.push(rel);
+      }
+    }
+
+    function sourceFor(rel) {
+      const source = SOURCES[rel.sourceId] || SOURCES['company-site'];
+      if (rel.sourceId === 'company-site') {
+        const company = companyById[rel.sourceCompanyId] || companyById[rel.customerId] || companyById[rel.companyA];
+        return {title:company ? `${company.name} website (general reference)` : source.title,
+          url:company ? `https://${company.website}` : null, scope:source.scope};
+      }
+      return source;
+    }
+    function assessmentTag(assessment) {
+      const cls = assessment === 'H' ? 'high' : assessment === 'L' ? 'low' : 'medium';
+      return `<span class="tag ${cls}" title="Qualitative assessment label, not a probability. See the linked evidence status separately.">${escapeHtml(CONFIDENCE_LABEL[assessment] || 'Unrated')}</span>`;
+    }
+    function evidenceCell(rel) {
+      const source = sourceFor(rel);
+      const link = source.url ? externalLink(source.url, source.title) : escapeHtml(source.title);
+      const note = rel.evidenceNote || source.scope;
+      const status = rel.evidenceStatus === 'primary'
+        ? `<span class="tag source-checked">Primary source checked · ${DATA_REVIEWED_ON}</span>`
+        : rel.evidenceStatus === 'official'
+          ? `<span class="tag source-official">Official announcement checked · ${DATA_REVIEWED_ON}</span>`
+          : '<span class="tag unverified">Reference only · unverified</span>';
+      return `<div>${link}</div><div class="muted" style="font-size:11px">${escapeHtml(note)}</div><div style="margin-top:4px">${status}</div>`;
+    }
+    function directConnections(companyId) {
+      const result = [];
+      for (const rel of relationsByCompany.get(companyId) || []) {
+        if (rel.type === 'supply') {
+          const isSupplier = rel.customerId === companyId;
+          result.push({rel,otherId:isSupplier ? rel.supplierId : rel.customerId,role:isSupplier ? 'supplier' : 'customer',depth:1,path:[companyId,isSupplier ? rel.supplierId : rel.customerId]});
+        } else {
+          const otherId = rel.companyA === companyId ? rel.companyB : rel.companyA;
+          result.push({rel,otherId,role:rel.type,depth:1,path:[companyId,otherId]});
+        }
+      }
+      return result;
+    }
+    // Directed BFS. Upstream follows customer <- supplier; downstream follows supplier -> customer.
+    function walkSupplyChain(startId, direction, maxDepth) {
+      const queue = [{id:startId,depth:0,path:[startId]}];
+      const bestDepth = new Map([[startId,0]]);
+      const seenEdges = new Set();
+      const rows = [];
+      while (queue.length) {
+        const current = queue.shift();
+        if (current.depth >= maxDepth) continue;
+        const links = direction === 'upstream'
+          ? (supplyByCustomer.get(current.id) || [])
+          : (supplyBySupplier.get(current.id) || []);
+        for (const rel of links) {
+          const nextId = direction === 'upstream' ? rel.supplierId : rel.customerId;
+          const edgeKey = rel.id;
+          const nextDepth = current.depth + 1;
+          const path = [...current.path,nextId];
+          if (!seenEdges.has(edgeKey)) {
+            rows.push({rel,otherId:nextId,role:direction === 'upstream' ? 'supplier' : 'customer',depth:nextDepth,path});
+            seenEdges.add(edgeKey);
+          }
+          if (!bestDepth.has(nextId) || nextDepth < bestDepth.get(nextId)) {
+            bestDepth.set(nextId,nextDepth);
+            queue.push({id:nextId,depth:nextDepth,path});
+          }
+        }
+      }
+      return rows;
+    }
+    function getExplorerRows(companyId) {
+      const directNonSupply = directConnections(companyId).filter(row => row.rel.type !== 'supply');
+      const upstream = state.filters.suppliers ? walkSupplyChain(companyId,'upstream',state.depth) : [];
+      const downstream = state.filters.customers ? walkSupplyChain(companyId,'downstream',state.depth) : [];
+      const peers = directNonSupply.filter(row => state.filters[row.role]);
+      const unique = new Map();
+      for (const row of [...upstream,...downstream,...peers]) {
+        const previous = unique.get(row.rel.id);
+        if (!previous || row.depth < previous.depth) unique.set(row.rel.id,row);
+      }
+      return [...unique.values()].sort((a,b) => a.depth-b.depth || a.role.localeCompare(b.role) || companyById[a.otherId].name.localeCompare(companyById[b.otherId].name));
+    }
+
+    function renderNavigation() {
+      document.getElementById('navigation').innerHTML = NAV.map(([id,label]) =>
+        `<button type="button" data-view="${id}" class="${state.view===id?'active':''}" ${state.view===id?'aria-current="page"':''}>${label}${['industry','news'].includes(id)?' <span class="muted">· planned</span>':''}</button>`
+      ).join('');
+    }
+    function render() {
+      renderNavigation();
+      const app = document.getElementById('app');
+      const renderers = {overview:renderOverview,explorer:renderExplorer,suppliers:renderSuppliers,customers:renderCustomers,watchlist:renderWatchlist,map:renderMap,industry:renderPlanned,news:renderPlanned};
+      app.innerHTML = (renderers[state.view] || renderOverview)();
+      if (state.view === 'explorer') renderGraph();
+      if (DATA_ERRORS.length) {
+        app.insertAdjacentHTML('afterbegin', `<div class="notice"><strong>Data validation warning.</strong> Some seed records failed validation. Check the browser console before using this dataset.</div>`);
+      }
+    }
+    function openCompany(id) {
+      if (!companyById[id]) return;
+      state.selectedCompany = id; state.view = 'explorer'; state.graphFilter = ''; state.tableFilter = '';
+      document.getElementById('company-search').value = '';
+      closeSearch(); render(); window.scrollTo({top:0,behavior:'smooth'});
+    }
+    function toggleWatchlist(id) {
+      if (!companyById[id]) return;
+      const index = state.watchlist.indexOf(id);
+      if (index >= 0) state.watchlist.splice(index,1); else state.watchlist.push(id);
+      saveWatchlist(); render();
+      notify(index >= 0 ? 'Removed from watchlist.' : 'Added to watchlist.');
+    }
+
+    function renderOverview() {
+      const relationshipCount = RELATIONSHIPS.length;
+      const supplyCount = RELATIONSHIPS.filter(rel => rel.type === 'supply').length;
+      const companyDegrees = COMPANIES.map(company => [company.id,(relationsByCompany.get(company.id) || []).length])
+        .sort((a,b) => b[1]-a[1]).slice(0,6);
+      const assessmentMix = ['H','M','L'].map(code => ({code,count:RELATIONSHIPS.filter(rel => rel.assessment===code).length}));
+      return `
+        <div class="notice"><strong>Public-source coverage, not an exhaustive registry.</strong> This dataset contains ${COMPANIES.length} companies and ${relationshipCount} relationship records. Some records are linked to company filings or official announcements; inherited demo links remain marked as reference-only. Public disclosures do not reveal every supplier, customer, subcontractor or product destination. A company missing from this dataset is <b>unknown, not absent</b>.</div>
+        <div class="grid grid-4">
+          <section class="panel"><div class="kpi-label">Companies in dataset</div><div class="kpi">${COMPANIES.length}</div></section>
+          <section class="panel"><div class="kpi-label">Relationship records</div><div class="kpi">${relationshipCount}</div></section>
+          <section class="panel"><div class="kpi-label">Supply relationships</div><div class="kpi">${supplyCount}</div></section>
+          <section class="panel"><div class="kpi-label">Source-checked records</div><div class="kpi">${RELATIONSHIPS.filter(rel=>!!rel.evidenceStatus).length}</div></section>
+        </div>
+        <div class="grid grid-3" style="margin-top:14px">
+          <section class="panel"><h2>Most connected in this dataset</h2>
+            ${companyDegrees.map(([id,count])=>`<div class="row"><div>${companyLink(id)}<small class="muted">${escapeHtml(companyById[id].ticker)}</small></div><span class="muted">${count} links</span></div>`).join('')}
+          </section>
+          <section class="panel"><h2>Relationship rating mix</h2>
+            ${assessmentMix.map(item=>`<div class="row">${assessmentTag(item.code)}<span class="muted">${item.count} records</span></div>`).join('')}
+            <p class="footer-note">H/M/L are qualitative assessment labels, not probabilities. Check each relationship's source note and verification tag.</p>
+          </section>
+          <section class="panel"><h2>Start exploring</h2>
+            ${['nvda','asml','aapl','air'].map(id=>`<div class="row"><div>${companyLink(id)}<small class="muted">${escapeHtml(companyById[id].hq)}</small></div><span class="muted">Open →</span></div>`).join('')}
+            <p class="footer-note">Select a company to inspect its direct links and discover upstream suppliers or downstream customers.</p>
+          </section>
+        </div>`;
+    }
+
+    function renderExplorer() {
+      const company = companyById[state.selectedCompany];
+      const direct = directConnections(company.id);
+      const directSuppliers = direct.filter(row=>row.role==='supplier');
+      const directCustomers = direct.filter(row=>row.role==='customer');
+      const upstreamCountries = [...new Set(directSuppliers.map(row=>companyById[row.otherId].country))];
+      const critical = directSuppliers.filter(row=>row.rel.critical).map(row=>companyById[row.otherId].name);
+      const rows = getExplorerRows(company.id);
+      const isSaved = state.watchlist.includes(company.id);
+      return `
+        <div class="grid grid-main">
+          <section class="panel">
+            <div class="company-header"><div><h1>${escapeHtml(company.name)}</h1><div class="muted">${escapeHtml(company.ticker)}</div></div>
+              <button type="button" class="button ${isSaved?'':'primary'}" data-toggle-watch="${company.id}">${isSaved?'★ In watchlist':'☆ Add to watchlist'}</button>
+            </div>
+            <p class="company-description">${escapeHtml(company.description)}</p>
+            <div class="table-wrap"><table class="profile-table"><tbody>
+              <tr><td>Headquarters</td><td>${escapeHtml(company.hq)}</td></tr>
+              <tr><td>Industry</td><td>${escapeHtml(company.industry)}</td></tr>
+              <tr><td>Website</td><td>${externalLink(`https://${company.website}`,company.website)}</td></tr>
+              <tr><td>Market cap</td><td class="muted">Not loaded in this prototype</td></tr>
+            </tbody></table></div>
+            <h2 style="margin-top:16px">Direct dependency snapshot</h2>
+            <div class="table-wrap"><table class="profile-table"><tbody>
+              <tr><td>Direct suppliers</td><td>${directSuppliers.length}</td></tr>
+              <tr><td>Direct customers</td><td>${directCustomers.length}</td></tr>
+              <tr><td>Supplier countries</td><td>${upstreamCountries.length?upstreamCountries.map(escapeHtml).join(', '):'Unknown'}</td></tr>
+              <tr><td>Critical flags</td><td>${critical.length?critical.map(escapeHtml).join(', '):'None flagged in seed data'}</td></tr>
+            </tbody></table></div>
+            <p class="footer-note">Counts describe only the curated records in this file. They are not estimates of the company's complete supply chain.</p>
+          </section>
+          <section class="panel">
+            <h2>Relationship network</h2>
+            <div class="toolbar">
+              <label class="check"><input type="checkbox" data-graph-filter="suppliers" ${state.filters.suppliers?'checked':''}> Suppliers</label>
+              <label class="check"><input type="checkbox" data-graph-filter="customers" ${state.filters.customers?'checked':''}> Customers</label>
+              <label class="check"><input type="checkbox" data-graph-filter="competitor" ${state.filters.competitor?'checked':''}> Competitors</label>
+              <label class="check"><input type="checkbox" data-graph-filter="partner" ${state.filters.partner?'checked':''}> Partners</label>
+              <label class="muted" for="graph-depth">Supply-chain depth</label>
+              <select id="graph-depth" aria-label="Supply chain depth">${[1,2,3,4].map(value=>`<option value="${value}" ${value===state.depth?'selected':''}>${value}</option>`).join('')}</select>
+              <input id="graph-filter" class="input" style="width:155px" placeholder="Find graph node…" value="${escapeHtml(state.graphFilter)}" aria-label="Find graph node">
+            </div>
+            <div id="graph" class="graph-frame" aria-label="Interactive company relationship graph"></div>
+            <div class="graph-legend"><span><i class="dot" style="background:var(--cyan)"></i>Supplier side</span><span><i class="dot" style="background:var(--blue)"></i>Customer side</span><span><i class="dot" style="background:var(--red)"></i>Competitor</span><span><i class="dot" style="background:var(--violet)"></i>Partner</span><span><i class="dot" style="background:var(--amber)"></i>Selected company / critical flag</span></div>
+            <p class="footer-note">Arrows point from supplier to customer. Click a company node to open its profile. Indirect paths follow supply relationships only; competitors and partners are shown as direct links.</p>
+          </section>
+        </div>
+        <section class="panel" style="margin-top:14px">
+          <div class="company-header"><h2>Relationships discovered from ${escapeHtml(company.name)}</h2><span class="muted">${rows.length} records in current view</span></div>
+          <div class="table-wrap"><table><thead><tr><th>Connected company</th><th>Relationship</th><th>Product / service</th><th>Path</th><th>Tier</th><th>Source reference</th><th>Seed rating</th></tr></thead>
+            <tbody>${renderRelationshipRows(rows)}</tbody></table></div>
+          <p class="footer-note">“Indirect” means a path was found through one or more other seed records. It does not prove a direct commercial relationship between the selected company and the indirect company.</p>
+        </section>`;
+    }
+
+    function renderRelationshipRows(rows) {
+      if (!rows.length) return `<tr><td colspan="7"><div class="empty"><strong>No matching curated relationships</strong>Unknown, not absent. This dataset may simply not contain the relevant links.</div></td></tr>`;
+      return rows.map(row=>{
+        const other = companyById[row.otherId];
+        const label = row.role === 'supplier' ? 'Supplier' : row.role === 'customer' ? 'Customer' : row.role === 'competitor' ? 'Competitor' : 'Partner';
+        const pathNames = row.path.map(id=>companyById[id]?.name || id);
+        const pathText = row.role === 'supplier' ? pathNames.join(' ← ') : row.role === 'customer' ? pathNames.join(' → ') : 'Direct relationship';
+        const source = sourceFor(row.rel);
+        const tier = row.depth === 1 ? '<span class="tag direct">Direct</span>' : `<span class="tag indirect">Tier ${row.depth}</span>`;
+        return `<tr>
+          <td>${companyLink(other.id)}<div class="muted">${escapeHtml(other.ticker)}</div></td>
+          <td><span class="dot" style="background:${TYPE_COLOR[row.role] || '#8795ad'}"></span>${label}${row.rel.critical&&row.depth===1?' <span class="tag critical">Flagged critical</span>':''}</td>
+          <td>${escapeHtml(row.rel.product)}</td><td class="muted">${escapeHtml(pathText)}</td><td>${tier}</td>
+          <td>${evidenceCell(row.rel)}</td><td>${assessmentTag(row.rel.assessment)}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function buildGraphModel(rootId) {
+      const nodes = new Map([[rootId,{id:rootId,side:'root',depth:0,role:'center'}]]);
+      const edges = new Map();
+      function addWalk(direction) {
+        const enabled = direction === 'upstream' ? state.filters.suppliers : state.filters.customers;
+        if (!enabled) return;
+        const rows = walkSupplyChain(rootId,direction,state.depth);
+        for (const row of rows) {
+          const id = row.otherId;
+          if (!nodes.has(id)) nodes.set(id,{id,side:direction,depth:row.depth,role:direction==='upstream'?'supplier':'customer'});
+          else if (nodes.get(id).side !== 'root' && row.depth < nodes.get(id).depth) {
+            nodes.set(id,{id,side:direction,depth:row.depth,role:direction==='upstream'?'supplier':'customer'});
+          }
+          edges.set(row.rel.id,{rel:row.rel,from:row.rel.supplierId,to:row.rel.customerId,kind:'supply'});
+        }
+      }
+      addWalk('upstream'); addWalk('downstream');
+      for (const row of directConnections(rootId)) {
+        if (row.rel.type==='supply' || !state.filters[row.role]) continue;
+        if (!nodes.has(row.otherId)) nodes.set(row.otherId,{id:row.otherId,side:'peer',depth:1,role:row.role});
+        edges.set(row.rel.id,{rel:row.rel,from:row.rel.companyA,to:row.rel.companyB,kind:row.rel.type});
+      }
+      return {nodes:[...nodes.values()],edges:[...edges.values()]};
+    }
+    function renderGraph() {
+      const container = document.getElementById('graph');
+      if (!container) return;
+      const model = buildGraphModel(state.selectedCompany);
+      const depthGroups = new Map();
+      for (const node of model.nodes) {
+        if (node.side==='root') continue;
+        const key = `${node.side}-${node.depth}`;
+        if (!depthGroups.has(key)) depthGroups.set(key,[]);
+        depthGroups.get(key).push(node);
+      }
+      const maxDepth = Math.max(1,...model.nodes.map(node=>node.depth));
+      const maxColumnCount = Math.max(1,...[...depthGroups.values()].map(group=>group.length));
+      const width = Math.max(960, maxDepth*190*2+200);
+      const height = Math.max(470, maxColumnCount*94+110);
+      const centerX = width/2, centerY = height/2;
+      const positions = new Map();
+      positions.set(state.selectedCompany,{x:centerX,y:centerY});
+      for (const [key,group] of depthGroups) {
+        const [side,depthText] = key.split('-'); const depth = Number(depthText);
+        group.sort((a,b)=>companyById[a.id].name.localeCompare(companyById[b.id].name));
+        const x = side==='upstream' ? centerX-depth*190 : side==='downstream' ? centerX+depth*190 : centerX;
+        group.forEach((node,index)=>{
+          let y;
+          if (side==='peer') y = 55 + index*88;
+          else y = (height/(group.length+1))*(index+1);
+          positions.set(node.id,{x,y});
+        });
+      }
+      const edgeMarkup = model.edges.map(edge=>{
+        const start=positions.get(edge.from), end=positions.get(edge.to);
+        if (!start || !end) return '';
+        const dx=end.x-start.x, bend=Math.max(35,Math.abs(dx)*.35);
+        const c1x=start.x+(dx>=0?bend:-bend), c2x=end.x-(dx>=0?bend:-bend);
+        const cls=edge.kind==='supply'?'supply':edge.kind;
+        const marker=edge.kind==='supply'?'url(#supply-arrow)':'';
+        return `<path class="graph-edge ${cls} ${edge.rel.critical?'critical':''}" d="M ${start.x} ${start.y} C ${c1x} ${start.y}, ${c2x} ${end.y}, ${end.x} ${end.y}" ${marker?`marker-end="${marker}"`:''}><title>${escapeHtml(edge.rel.product)}</title></path>`;
+      }).join('');
+      const nodeMarkup = model.nodes.map(node=>{
+        const company=companyById[node.id], pos=positions.get(node.id);
+        const roleLabel=node.side==='root'?'SELECTED':node.role.toUpperCase();
+        const name=company.name.length>19?company.name.slice(0,17)+'…':company.name;
+        return `<g class="graph-node ${node.side==='root'?'root':node.role}" data-node-id="${escapeHtml(node.id)}" tabindex="0" role="button" aria-label="Open ${escapeHtml(company.name)} profile" transform="translate(${pos.x-72},${pos.y-25})">
+          <rect width="144" height="50" rx="8"></rect>
+          <text x="72" y="21" text-anchor="middle" font-size="12" font-weight="650">${escapeHtml(name)}</text>
+          <text class="sub" x="72" y="37" text-anchor="middle">${escapeHtml(roleLabel)} · ${node.depth===0?'ROOT':`TIER ${node.depth}`}</text>
+        </g>`;
+      }).join('');
+      const svg = `<svg class="graph-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="Relationship graph for ${escapeHtml(companyById[state.selectedCompany].name)}">
+        <defs><marker id="supply-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#2589a1"></path></marker></defs>
+        ${edgeMarkup}${nodeMarkup}</svg>`;
+      container.innerHTML = model.nodes.length===1
+        ? `<div class="empty"><strong>No visible relationships at these settings</strong>Try enabling another relationship type or increasing the supply-chain depth.</div>`
+        : svg;
+      applyGraphSearch();
+    }
+    function applyGraphSearch() {
+      const query=state.graphFilter.trim().toLowerCase();
+      document.querySelectorAll('.graph-node').forEach(node=>{
+        const label=node.textContent.toLowerCase();
+        const match=!!query && label.includes(query);
+        node.classList.toggle('hit',match);
+        node.classList.toggle('dim',!!query&&!match);
+      });
+    }
+
+    function renderSupplyView(direction) {
+      const company=companyById[state.selectedCompany];
+      const upstream=direction==='upstream';
+      const rows=walkSupplyChain(company.id,direction,state.depth);
+      const title=upstream?'Suppliers':'Customers';
+      const context=upstream?'suppliers to':'customers of';
+      const tableRows=rows.map(row=>{
+        const related=companyById[row.otherId];
+        const source=sourceFor(row.rel);
+        const path=row.path.map(id=>companyById[id].name).join(upstream?' ← ':' → ');
+        const tier=row.depth===1?'<span class="tag direct">Direct</span>':`<span class="tag indirect">Tier ${row.depth}</span>`;
+        return `<tr><td>${companyLink(related.id)}<div class="muted">${escapeHtml(related.ticker)}</div></td><td>${escapeHtml(related.hq)}</td><td>${escapeHtml(row.rel.product)}</td><td>${escapeHtml(path)}</td><td>${tier}</td><td>${evidenceCell(row.rel)}</td><td>${assessmentTag(row.rel.assessment)}</td></tr>`;
+      }).join('');
+      return `<div class="panel">
+        <div class="company-header"><div><h1>${title}</h1><p class="muted">Showing curated ${title.toLowerCase()} ${context} ${escapeHtml(company.name)}.</p></div>
+          <button type="button" class="button" data-open-company="${company.id}">Change company</button></div>
+        <div class="toolbar"><label class="muted" for="supply-depth">Maximum supply-chain depth</label><select id="supply-depth">${[1,2,3,4].map(value=>`<option value="${value}" ${value===state.depth?'selected':''}>${value}</option>`).join('')}</select>
+          <input id="relationship-filter" class="input" placeholder="Filter company, ticker or product…" value="${escapeHtml(state.tableFilter)}" aria-label="Filter relationships"></div>
+        <div class="table-wrap"><table><thead><tr><th>${upstream?'Supplier':'Customer'}</th><th>Location</th><th>Product / service</th><th>Path from selected company</th><th>Tier</th><th>Source reference</th><th>Seed rating</th></tr></thead>
+        <tbody id="supply-table-body">${tableRows || `<tr><td colspan="7"><div class="empty"><strong>No curated ${title.toLowerCase()} found</strong>Unknown, not absent. No matching relationship exists in this small seed dataset.</div></td></tr>`}</tbody></table></div>
+        <p class="footer-note">Indirect entries are discovered by following directed supply relationships. They are upstream/downstream dependencies in the curated graph, not proof of a direct contract with ${escapeHtml(company.name)}.</p>
+      </div>`;
+    }
+    function renderSuppliers(){return renderSupplyView('upstream');}
+    function renderCustomers(){return renderSupplyView('downstream');}
+    function renderWatchlist() {
+      const rows=state.watchlist.map(id=>companyById[id]).filter(Boolean);
+      return `<section class="panel"><div class="company-header"><div><h1>Watchlist</h1><p class="muted">Saved locally in this browser.</p></div><span class="pill">${rows.length} saved</span></div>
+        ${rows.length?rows.map(company=>`<div class="row"><div class="row-main">${companyLink(company.id)}<small>${escapeHtml(company.ticker)} · ${escapeHtml(company.industry)}</small></div><button type="button" class="button danger" data-toggle-watch="${company.id}">Remove</button></div>`).join(''):`<div class="empty"><strong>Your watchlist is empty</strong>Open a company profile and select “Add to watchlist”.</div>`}
+        <p class="footer-note">Watchlist entries are stored in local browser storage. They are not synced between devices and do not create alerts.</p></section>`;
+    }
+    function mapProject(lon,lat) {
+      const safeLat=Math.max(-60,Math.min(82,lat));
+      return {x:(lon+180)/360*1200,y:(82-safeLat)/142*520};
+    }
+    function mapPath(points) {
+      return points.map((point,index)=>{
+        const xy=mapProject(point[0],point[1]);
+        return `${index?'L':'M'}${xy.x.toFixed(1)},${xy.y.toFixed(1)}`;
+      }).join(' ')+' Z';
+    }
+    function getVisibleMapEntities() {
+      const query=state.mapSearch.trim().toLowerCase();
+      const entities=[];
+      if (state.mapShowHQ) {
+        for (const company of COMPANIES) {
+          const coords=HQ_COORDS[company.id];
+          if (!coords) continue;
+          if (state.mapCountry!=='all' && company.country!==state.mapCountry) continue;
+          if (state.mapIndustry!=='all' && industryGroup(company)!==state.mapIndustry) continue;
+          if (query && !`${company.name} ${company.ticker} ${company.hq} ${company.country} ${company.industry} ${coords[2]}`.toLowerCase().includes(query)) continue;
+          entities.push({key:`hq:${company.id}`,kind:'hq',ownerId:company.id,name:`${company.name} HQ`,city:coords[2],country:company.country,lon:coords[0],lat:coords[1],group:industryGroup(company),company});
+        }
+      }
+      if (state.mapShowFacilities) {
+        for (const facility of FACILITIES) {
+          const owner=companyById[facility.companyId];
+          if (!owner) continue;
+          if (state.mapCountry!=='all' && facility.country!==state.mapCountry) continue;
+          if (state.mapIndustry!=='all' && industryGroup(owner)!==state.mapIndustry) continue;
+          if (state.mapFacilityType!=='all' && facility.type!==state.mapFacilityType) continue;
+          if (query && !`${facility.name} ${facility.city} ${facility.country} ${owner.name} ${owner.ticker} ${FACILITY_TYPE_LABEL[facility.type]}`.toLowerCase().includes(query)) continue;
+          entities.push({key:`facility:${facility.id}`,kind:'facility',ownerId:facility.companyId,name:facility.name,city:facility.city,country:facility.country,lon:facility.lon,lat:facility.lat,group:industryGroup(owner),facility,company:owner});
+        }
+      }
+      return entities.sort((a,b)=>a.country.localeCompare(b.country)||a.name.localeCompare(b.name));
+    }
+    function mapMarkerPositions(entities) {
+      const result={},placed=[];
+      for (const entity of entities) {
+        const base=mapProject(entity.lon,entity.lat);
+        let x=base.x,y=base.y,attempt=0;
+        const crowded=()=>placed.some(point=>Math.hypot(point.x-x,point.y-y)<15);
+        while (crowded() && attempt<70) {
+          attempt++;
+          const angle=attempt*2.399963229728653;
+          const radius=10+Math.floor((attempt-1)/8)*6;
+          x=Math.max(8,Math.min(1192,base.x+Math.cos(angle)*radius));
+          y=Math.max(8,Math.min(512,base.y+Math.sin(angle)*radius));
+        }
+        result[entity.key]={x,y,baseX:base.x,baseY:base.y};
+        placed.push({x,y});
+      }
+      return result;
+    }
+    function mapMarkerShape(entity,x,y,color) {
+      if (entity.kind==='hq') return `<circle class="pin-core" cx="${x}" cy="${y}" r="5.5" fill="${color}"/>`;
+      if (entity.facility.type==='fab') return `<path class="pin-core" d="M${x},${y-7} L${x+7},${y} L${x},${y+7} L${x-7},${y} Z" fill="${color}"/>`;
+      if (entity.facility.type==='assembly-test') return `<path class="pin-core" d="M${x},${y-7} L${x+7},${y+6} L${x-7},${y+6} Z" fill="${color}"/>`;
+      if (entity.facility.type==='aircraft-assembly') return `<path class="pin-core" d="M${x-7},${y-4} L${x+7},${y-4} L${x+7},${y+4} L${x-7},${y+4} Z" fill="${color}"/>`;
+      return `<rect class="pin-core" x="${x-5.5}" y="${y-5.5}" width="11" height="11" rx="1.5" fill="${color}"/>`;
+    }
+    function renderMap() {
+      const entities=getVisibleMapEntities();
+      const positions=mapMarkerPositions(entities);
+      const countries=[...new Set([...COMPANIES.map(company=>company.country),...FACILITIES.map(facility=>facility.country)])].sort();
+      const selected=entities.find(entity=>entity.key===state.mapSelected);
+      const viewWidth=1200/state.mapZoom,viewHeight=520/state.mapZoom;
+      const viewX=(1200-viewWidth)/2,viewY=(520-viewHeight)/2;
+      const gridLon=[-150,-120,-90,-60,-30,0,30,60,90,120,150].map(lon=>{const p=mapProject(lon,0);return `<line class="map-grid" x1="${p.x}" y1="0" x2="${p.x}" y2="520"/>`;}).join('');
+      const gridLat=[-60,-45,-30,-15,0,15,30,45,60,75].map(lat=>{const p=mapProject(0,lat);return `<line class="map-grid" x1="0" y1="${p.y}" x2="1200" y2="${p.y}"/>`;}).join('');
+      const land=MAP_LAND.map(points=>`<path class="map-land" d="${mapPath(points)}"/>`).join('');
+      const mapLabels=[['NORTH AMERICA',-108,49],['SOUTH AMERICA',-62,-18],['EUROPE',18,52],['AFRICA',20,4],['ASIA',100,47],['OCEANIA',135,-27]].map(([label,lon,lat])=>{const p=mapProject(lon,lat);return `<text class="map-region-label" x="${p.x}" y="${p.y}">${label}</text>`;}).join('');
+      const selectedCompanyId=selected?.ownerId;
+      const hqPositionByCompany=new Map(entities.filter(entity=>entity.kind==='hq').map(entity=>[entity.ownerId,positions[entity.key]]));
+      let links='';
+      if (selectedCompanyId && state.mapShowLinks && hqPositionByCompany.has(selectedCompanyId)) {
+        const selectedLinks=directConnections(selectedCompanyId).filter(row=>row.rel.type==='supply' && hqPositionByCompany.has(row.otherId));
+        links=selectedLinks.map(row=>{
+          const rel=row.rel,from=hqPositionByCompany.get(rel.supplierId),to=hqPositionByCompany.get(rel.customerId);
+          return `<line class="map-link" x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" marker-end="url(#map-arrow)"><title>${escapeHtml(companyById[rel.supplierId].name)} → ${escapeHtml(companyById[rel.customerId].name)}: ${escapeHtml(rel.product)}</title></line>`;
+        }).join('');
+      }
+      const markers=entities.map(entity=>{
+        const pos=positions[entity.key],color=entity.kind==='hq'?'#e2e8f0':
+          entity.facility.type==='fab'?'#22d3ee':entity.facility.type==='assembly-test'?'#a78bfa':entity.facility.type==='aircraft-assembly'?'#f5b942':'#4f8cff';
+        const active=entity.key===state.mapSelected;
+        const leader=Math.hypot(pos.x-pos.baseX,pos.y-pos.baseY)>2?`<line class="map-leader" x1="${pos.baseX}" y1="${pos.baseY}" x2="${pos.x}" y2="${pos.y}"/>`:'';
+        const typeLabel=entity.kind==='hq'?'Company headquarters':FACILITY_TYPE_LABEL[entity.facility.type];
+        return `${leader}<g class="map-pin ${active?'selected':''}" data-map-entity="${escapeHtml(entity.key)}" role="button" tabindex="0" aria-label="Select ${escapeHtml(entity.name)} in ${escapeHtml(entity.city)}, ${escapeHtml(entity.country)}">
+          <title>${escapeHtml(entity.name)} · ${escapeHtml(entity.city)}, ${escapeHtml(entity.country)} · ${escapeHtml(typeLabel)}</title>
+          <circle class="pin-halo" cx="${pos.x}" cy="${pos.y}" r="10"/>${mapMarkerShape(entity,pos.x,pos.y,color)}
+          <text class="map-label" x="${pos.x+9}" y="${pos.y-9}">${escapeHtml(entity.name)}</text>
+        </g>`;
+      }).join('');
+      const hqCount=entities.filter(entity=>entity.kind==='hq').length;
+      const facilityCount=entities.filter(entity=>entity.kind==='facility').length;
+      const countryCount=new Set(entities.map(entity=>entity.country)).size;
+      const direct=selectedCompanyId?directConnections(selectedCompanyId):[];
+      const supplierCount=direct.filter(row=>row.role==='supplier').length;
+      const customerCount=direct.filter(row=>row.role==='customer').length;
+      const selectionHtml=selected?`<div class="map-selected">
+        <div class="muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.5px">${selected.kind==='hq'?'Company headquarters':'Facility / production site'}</div>
+        <h3 style="margin-top:5px">${escapeHtml(selected.name)}</h3>
+        <div>${companyLink(selected.ownerId,selected.company.name)}</div>
+        <p>${escapeHtml(selected.city)}, ${escapeHtml(selected.country)}</p>
+        ${selected.kind==='facility'?`<p><span class="tag source-official">${escapeHtml(FACILITY_TYPE_LABEL[selected.facility.type])}</span></p><p class="muted">${escapeHtml(selected.facility.note)}</p><p>${externalLink(selected.facility.sourceUrl,selected.facility.sourceTitle)}</p>`:`<p class="muted">${escapeHtml(selected.company.industry)}</p>`}
+        <div class="map-kpis"><div class="map-kpi"><strong>${supplierCount}</strong><div class="muted">Known suppliers</div></div><div class="map-kpi"><strong>${customerCount}</strong><div class="muted">Known customers</div></div></div>
+        <div class="toolbar"><button type="button" class="button primary" data-open-company="${selected.ownerId}">Open company profile</button><button type="button" class="button" data-clear-map-selection>Clear</button></div>
+      </div>`:`<div class="map-selected"><strong>Select a map marker</strong><p class="muted">Choose a headquarters pin or a facility marker to see its location, company and evidence reference.</p></div>`;
+      const listHtml=entities.map(entity=>`<button type="button" class="map-company-item ${entity.key===state.mapSelected?'active':''}" data-map-entity="${escapeHtml(entity.key)}">
+        <span><strong>${escapeHtml(entity.name)}</strong><small>${escapeHtml(entity.company.name)} · ${escapeHtml(entity.city)}, ${escapeHtml(entity.country)}</small></span>
+        <span class="map-swatch" style="background:${entity.kind==='hq'?'#e2e8f0':entity.facility.type==='fab'?'#22d3ee':entity.facility.type==='assembly-test'?'#a78bfa':entity.facility.type==='aircraft-assembly'?'#f5b942':'#4f8cff'}"></span>
+      </button>`).join('') || '<div class="empty">No locations match these filters.</div>';
+      const legend=[['Company HQ','#e2e8f0','hq'],['Semiconductor fab','#22d3ee','diamond'],['Manufacturing site','#4f8cff','square'],['Assembly & test','#a78bfa','triangle'],['Aircraft final assembly','#f5b942','bar']].map(([label,color,shape])=>`<span><i class="map-swatch ${shape}" style="background:${color}"></i>${label}</span>`).join('');
+      return `<section class="panel">
+        <div class="company-header"><div><h1>Global Supply-Chain Map</h1><p class="muted">Explore headquarters and publicly identified production locations for companies in this dataset.</p></div><span class="pill source-official">${entities.length} locations visible</span></div>
+        <div class="notice info"><strong>Coverage and precision:</strong> Headquarters and facilities use approximate city-centre or regional pins, not exact building coordinates. Facility markers are included only where an official company source names the site. This is a curated sample, not a complete global facility register.</div>
+        <div class="map-toolbar">
+          <label><span class="field-label" for="map-search">Search companies / sites</span><input id="map-search" class="input map-search" type="search" placeholder="Company, ticker, facility or city…" value="${escapeHtml(state.mapSearch)}"></label>
+          <label><span class="field-label" for="map-country">Country</span><select id="map-country" class="map-select"><option value="all">All countries</option>${countries.map(country=>`<option value="${escapeHtml(country)}" ${state.mapCountry===country?'selected':''}>${escapeHtml(country)}</option>`).join('')}</select></label>
+          <label><span class="field-label" for="map-industry">Industry</span><select id="map-industry" class="map-select"><option value="all">All industries</option>${MAP_INDUSTRIES.map(group=>`<option value="${escapeHtml(group)}" ${state.mapIndustry===group?'selected':''}>${escapeHtml(group)}</option>`).join('')}</select></label>
+          <label><span class="field-label" for="map-facility-type">Facility type</span><select id="map-facility-type" class="map-select"><option value="all">All facility types</option>${Object.entries(FACILITY_TYPE_LABEL).map(([value,label])=>`<option value="${value}" ${state.mapFacilityType===value?'selected':''}>${escapeHtml(label)}</option>`).join('')}</select></label>
+          <label class="check" style="padding-bottom:8px"><input type="checkbox" id="map-show-hq" ${state.mapShowHQ?'checked':''}> HQs</label>
+          <label class="check" style="padding-bottom:8px"><input type="checkbox" id="map-show-facilities" ${state.mapShowFacilities?'checked':''}> Facilities</label>
+          <label class="check" style="padding-bottom:8px"><input type="checkbox" id="map-show-links" ${state.mapShowLinks?'checked':''}> Supply links</label>
+          <div class="map-zoom"><button type="button" class="button" data-map-zoom="out" aria-label="Zoom out">−</button><button type="button" class="button" data-map-zoom="reset">Fit</button><button type="button" class="button" data-map-zoom="in" aria-label="Zoom in">+</button></div>
+        </div>
+        <div class="map-kpis"><div class="map-kpi"><strong>${hqCount}</strong><div class="muted">Visible HQs</div></div><div class="map-kpi"><strong>${facilityCount}</strong><div class="muted">Visible facilities</div></div><div class="map-kpi"><strong>${countryCount}</strong><div class="muted">Countries</div></div></div>
+        <div class="map-layout">
+          <div><div class="world-map-wrap"><svg id="world-map-svg" class="world-map" viewBox="${viewX} ${viewY} ${viewWidth} ${viewHeight}" role="img" aria-label="Illustrative world map with company headquarters and selected production facilities">
+            <defs><marker id="map-arrow" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#f5b942"/></marker><linearGradient id="map-ocean" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1b2e"/><stop offset="1" stop-color="#07111e"/></linearGradient></defs>
+            <rect x="0" y="0" width="1200" height="520" fill="url(#map-ocean)"/>${gridLon}${gridLat}${land}${mapLabels}${links}${markers}
+          </svg></div><div class="map-legend">${legend}</div></div>
+          <aside class="map-sidebar">${selectionHtml}<div class="map-selected"><div class="company-header"><strong>Locations in view</strong><span class="muted">${entities.length} results</span></div><div class="map-company-list">${listHtml}</div></div></aside>
+        </div>
+        <p class="footer-note">Supply lines connect company headquarters and show only curated direct supplier → customer records for the selected company's owner. Facility records link to company disclosures. The map uses simplified illustrative continent shapes and is not suitable for navigation or measuring distances. Pins in dense city clusters may be offset slightly for readability.</p>
+      </section>`;
+    }
+
+    function renderPlanned() {
+      const meta={
+        map:['Supply Chain Map','A geographic view of headquarters, production sites and industrial clusters is not implemented in this single-file prototype.'],
+        industry:['Industry Intelligence','Sector concentration and dependency analytics are planned but are not calculated from this seed dataset.'],
+        news:['News & Events','Live news, contract announcements and relationship-change monitoring require a verified data source and backend.']
+      }[state.view];
+      return `<section class="panel planned"><span class="pill demo">PLANNED FEATURE</span><h1 style="margin-top:10px">${meta[0]}</h1><p>${meta[1]}</p><p class="muted">This page is intentionally labeled as planned rather than displaying simulated live information.</p></section>`;
+    }
+
+    function updateSearchResults() {
+      const input=document.getElementById('company-search');
+      const panel=document.getElementById('search-results');
+      const query=input.value.trim().toLowerCase();
+      state.searchMatches=query?COMPANIES.filter(company=>`${company.name} ${company.ticker} ${company.hq} ${company.country} ${company.industry}`.toLowerCase().includes(query)).slice(0,10):[];
+      state.searchIndex=state.searchMatches.length?Math.min(Math.max(state.searchIndex,0),state.searchMatches.length-1):-1;
+      if (!query) { closeSearch(); return; }
+      panel.innerHTML=state.searchMatches.length?state.searchMatches.map((company,index)=>
+        `<button type="button" role="option" aria-selected="${index===state.searchIndex}" class="search-result ${index===state.searchIndex?'active':''}" data-search-index="${index}"><span><strong>${escapeHtml(company.name)}</strong><small>${escapeHtml(company.ticker)}</small></span><small>${escapeHtml(company.hq)} · ${escapeHtml(company.industry)}</small></button>`
+      ).join(''):`<div class="empty">No match in the curated seed dataset.</div>`;
+      panel.classList.add('open'); input.setAttribute('aria-expanded','true');
+    }
+    function closeSearch() {
+      const panel=document.getElementById('search-results');
+      panel.classList.remove('open'); panel.innerHTML='';
+      document.getElementById('company-search').setAttribute('aria-expanded','false');
+      state.searchMatches=[]; state.searchIndex=-1;
+    }
+    function selectSearchResult(index) {
+      const company=state.searchMatches[index];
+      if (company) openCompany(company.id);
+    }
+    function filterSupplyTable(query) {
+      state.tableFilter=query;
+      const direction=state.view==='suppliers'?'upstream':'downstream';
+      const rows=walkSupplyChain(state.selectedCompany,direction,state.depth).filter(row=>{
+        const company=companyById[row.otherId];
+        return `${company.name} ${company.ticker} ${company.hq} ${row.rel.product} ${row.path.map(id=>companyById[id].name).join(' ')}`.toLowerCase().includes(query.toLowerCase());
+      });
+      const body=document.getElementById('supply-table-body');
+      if (!body) return;
+      if (!rows.length) { body.innerHTML=`<tr><td colspan="7"><div class="empty"><strong>No matching records</strong>Try another filter. The underlying dataset remains unchanged.</div></td></tr>`; return; }
+      body.innerHTML=rows.map(row=>{
+        const related=companyById[row.otherId], upstream=direction==='upstream';
+        const path=row.path.map(id=>companyById[id].name).join(upstream?' ← ':' → ');
+        return `<tr><td>${companyLink(related.id)}<div class="muted">${escapeHtml(related.ticker)}</div></td><td>${escapeHtml(related.hq)}</td><td>${escapeHtml(row.rel.product)}</td><td>${escapeHtml(path)}</td><td>${row.depth===1?'<span class="tag direct">Direct</span>':`<span class="tag indirect">Tier ${row.depth}</span>`}</td><td>${evidenceCell(row.rel)}</td><td>${assessmentTag(row.rel.assessment)}</td></tr>`;
+      }).join('');
+    }
+
+    document.addEventListener('click', event => {
+      const openButton=event.target.closest('[data-open-company]');
+      if (openButton) { openCompany(openButton.dataset.openCompany); return; }
+      const navButton=event.target.closest('[data-view]');
+      if (navButton) { state.view=navButton.dataset.view; state.tableFilter=''; closeSearch(); render(); return; }
+      const watchButton=event.target.closest('[data-toggle-watch]');
+      if (watchButton) { toggleWatchlist(watchButton.dataset.toggleWatch); return; }
+      const mapEntity=event.target.closest('[data-map-entity]');
+      if (mapEntity) { state.mapSelected=mapEntity.dataset.mapEntity; render(); return; }
+      const mapZoom=event.target.closest('[data-map-zoom]');
+      if (mapZoom) {
+        state.mapZoom=mapZoom.dataset.mapZoom==='in'?Math.min(2.25,state.mapZoom+0.25):mapZoom.dataset.mapZoom==='out'?Math.max(1,state.mapZoom-0.25):1;
+        render(); return;
+      }
+      if (event.target.closest('[data-clear-map-selection]')) { state.mapSelected=''; render(); return; }
+      const searchButton=event.target.closest('[data-search-index]');
+      if (searchButton) { selectSearchResult(Number(searchButton.dataset.searchIndex)); return; }
+      if (!event.target.closest('.search-wrap')) closeSearch();
+      const graphNode=event.target.closest('[data-node-id]');
+      if (graphNode) openCompany(graphNode.dataset.nodeId);
+    });
+    document.addEventListener('keydown', event => {
+      const graphNode=event.target.closest?.('[data-node-id]');
+      if (graphNode && (event.key==='Enter'||event.key===' ')) { event.preventDefault(); openCompany(graphNode.dataset.nodeId); }
+      const mapMarker=event.target.closest?.('[data-map-entity]');
+      if (mapMarker && (event.key==='Enter'||event.key===' ')) { event.preventDefault(); state.mapSelected=mapMarker.dataset.mapEntity; render(); }
+    });
+    document.getElementById('company-search').addEventListener('input', event => { state.searchIndex=0; updateSearchResults(); });
+    document.getElementById('company-search').addEventListener('keydown', event => {
+      if (event.key==='ArrowDown' && state.searchMatches.length) { event.preventDefault(); state.searchIndex=Math.min(state.searchIndex+1,state.searchMatches.length-1); updateSearchResults(); }
+      else if (event.key==='ArrowUp' && state.searchMatches.length) { event.preventDefault(); state.searchIndex=Math.max(state.searchIndex-1,0); updateSearchResults(); }
+      else if (event.key==='Enter' && state.searchMatches.length) { event.preventDefault(); selectSearchResult(state.searchIndex<0?0:state.searchIndex); }
+      else if (event.key==='Escape') closeSearch();
+    });
+    document.addEventListener('change', event => {
+      const target=event.target;
+      if (target.matches('[data-graph-filter]')) { state.filters[target.dataset.graphFilter]=target.checked; render(); }
+      if (target.id==='graph-depth') { state.depth=Number(target.value); render(); }
+      if (target.id==='supply-depth') { state.depth=Number(target.value); state.tableFilter=''; render(); }
+      if (target.id==='map-country') { state.mapCountry=target.value; render(); }
+      if (target.id==='map-industry') { state.mapIndustry=target.value; render(); }
+      if (target.id==='map-facility-type') { state.mapFacilityType=target.value; render(); }
+      if (target.id==='map-show-hq') { state.mapShowHQ=target.checked; render(); }
+      if (target.id==='map-show-facilities') { state.mapShowFacilities=target.checked; render(); }
+      if (target.id==='map-show-links') { state.mapShowLinks=target.checked; render(); }
+    });
+    document.addEventListener('input', event => {
+      const target=event.target;
+      if (target.id==='graph-filter') { state.graphFilter=target.value; applyGraphSearch(); }
+      if (target.id==='relationship-filter') filterSupplyTable(target.value);
+      if (target.id==='map-search') {
+        state.mapSearch=target.value;
+        const cursor=target.selectionStart;
+        render();
+        const refreshed=document.getElementById('map-search');
+        if (refreshed) { refreshed.focus(); try { refreshed.setSelectionRange(cursor,cursor); } catch {} }
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
